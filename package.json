@@ -1,0 +1,17 @@
+{
+  "name": "dc-crime-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "backend.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "fetch": "^1.1.0",
+    "node-fetch": "^2.7.0"
+  }
+}
