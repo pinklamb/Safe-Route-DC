@@ -5,4 +5,5 @@
 !.elasticbeanstalk/*.global.yml
 
 node_modules/
+openrouteservice-js
 .env
