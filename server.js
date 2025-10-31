@@ -3,9 +3,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { config } from "./config.js";
 import sql from "mssql";
-import Openrouteservice from './openrouteservice-js/dist/ors-js-client.umd.cjs'
-
-let orsDirections = new Openrouteservice.Directions({ api_key:config.api_key });
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,6 +10,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = config.PORT || 4000;
+
 app.use(express.json());
 
 // Serve static files
@@ -188,7 +186,7 @@ app.get("/api/crimes", async (req, res) => {
 // Start DB, server, initial sync, and periodic updates
 initDB()
   .then(async () => {
-    app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}/`));
+    app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
 
     // Get the newest crime in DB
     const lastDate = await getLatestCrimeDate();
@@ -205,73 +203,59 @@ initDB()
   .catch((err) => console.error("DB init failed:", err));
 
 
-// ORS autocomplete user input 
-app.post("/api/autocomplete", async (req, res) => {
-  const { query } = req.body;
-  if (!query) return res.status(400).json({ error: "Missing query" });
-
+app.post("/api/safetyScore", async (req, res) => {
   try {
-    const geoRes = await fetch(
-      `https://api.openrouteservice.org/geocode/autocomplete?api_key=${config.api_key}&text=${encodeURIComponent(query)}`
-    );
-    const geoData = await geoRes.json();
-    res.json(geoData);
+    const { route } = req.body; 
+    if (!route || !route.length) {
+      return res.status(400).json({ error: "No route provided" });
+    }
+
+    // builds the bounding box
+    const lats = route.map(p => p.lat);
+    const lngs = route.map(p => p.lng);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLon = Math.min(...lngs);
+    const maxLon = Math.max(...lngs);
+
+    // Fetch crimes within bounding box
+    const request = pool.request()
+      .input("minLat", sql.Decimal(10,7), minLat)
+      .input("maxLat", sql.Decimal(10,7), maxLat)
+      .input("minLon", sql.Decimal(10,7), minLon)
+      .input("maxLon", sql.Decimal(10,7), maxLon);
+
+    const result = await request.query(`
+      SELECT crime_type, latitude, longitude
+      FROM crimes
+      WHERE latitude BETWEEN @minLat AND @maxLat
+        AND longitude BETWEEN @minLon AND @maxLon
+    `);
+
+    const crimes = result.recordset;
+
+    // Calculate safety score
+    const thresholdKm = 0.1; // 100 meters
+    let weightedCrimeCount = 0;
+
+    const violentCrimes = ["ASSAULT", "ROBBERY", "HOMICIDE", "SEXUAL ABUSE"];
+
+    for (const crime of crimes) {
+      for (const point of route) {
+        const d = 
+        if (d <= thresholdKm) {
+          weightedCrimeCount += violentCrimes.includes(crime.crime_type.toUpperCase()) ? 5 : 1;
+          break; // stops crimes from being counted twice
+        }
+      }
+    }
+
+    // Score out of 100
+    const safetyScore = Math.max(0, 100 - weightedCrimeCount);
+
+    res.json({ safetyScore, weightedCrimeCount });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch autocomplete" });
+    console.error("Safety score error:", err);
+    res.status(500).json({ error: "Failed to calculate safety score" });
   }
 });
-
-
-// backend endpoint for ORS routing
-app.post("/api/route", async (req, res) => {
-  const { start, end } = req.body;
-
-  if (!start || !end) {
-    return res.status(400).json({ error: "Missing start or end coordinates" });
-  }
-
-  try {
-    // ORS expects [lon, lat] 
-    const response = await orsDirections.calculate({
-      "coordinates": [
-        [start.lon, start.lat],
-        [end.lon, end.lat]
-      ],
-      "profile": "foot-walking",
-      "format": "geojson"         
-    });
-
-    res.json(response);
-  } catch (err) {
-    console.error("ORS error:", err);
-    res.status(500).json({ error: "Failed to fetch route from ORS", details: err.message });
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

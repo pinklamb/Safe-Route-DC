@@ -11,7 +11,7 @@ export function getUserLocation() {
         (pos) => {
           const lon = pos.coords.longitude;
           const lat = pos.coords.latitude;
-          currentUserLocation = { lon, lat };
+          currentUserLocation = { lng: lon, lat };
 
           const locationEl = document.getElementById("locationDisplay");
           if (locationEl) {
