@@ -4,7 +4,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "cross-env NODE_ENV=tests NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -17,5 +18,16 @@
   },
   "engines": {
     "node": "22.x"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {}
   }
+
+
 }
