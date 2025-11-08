@@ -33,6 +33,7 @@ export async function initDB() {
   `);
 
   console.log("Crimes table ready!");
+  
 }
 
 
@@ -73,6 +74,45 @@ export async function saveCrimeData(crime) {
 }
 
 
+
+export async function addCrimes(baseUrl) {
+  try {
+    let total = 0;
+    let offset = 0;
+    const limit = 1000;
+
+    while (true) {
+      // Append paging parameters
+      const url = `${baseUrl}&resultOffset=${offset}&resultRecordCount=${limit}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const features = data.features || [];
+
+      if (features.length === 0) break;
+
+      for (const f of features) {
+        await saveCrimeData(f.attributes);
+      }
+
+      total += features.length;
+      offset += limit;
+
+      console.log(`Synced ${total} records...`);
+
+      await new Promise((r) => setTimeout(r, 400));
+    }
+
+    console.log(`✔️ Sync Complete — ${total} total records.`);
+  } catch (err) {
+    console.error("❌ Crime update failed:", err);
+  }
+}
+
+
+
+
+
+
 export async function updateCrimesFromDC(sinceDate = null) {
   try {
     console.log(sinceDate ? `Syncing new crimes since ${sinceDate}...` : "Syncing all DC crimes...");
@@ -80,7 +120,7 @@ export async function updateCrimesFromDC(sinceDate = null) {
     let offset = 0;
     const limit = 1000;
     const dateFilter = sinceDate ? `AND REPORT_DAT > '${sinceDate.toISOString()}'` : "";
-
+    
     while (true) {
       const url = `https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/FeatureServer/7/query?where=1%3D1${dateFilter}&outFields=*&outSR=4326&f=json&resultOffset=${offset}&resultRecordCount=${limit}`;
       const response = await fetch(url);
@@ -104,13 +144,28 @@ export async function updateCrimesFromDC(sinceDate = null) {
   }
 }
 
-
-
-
-
 // Get latest crime date in DB
 export async function getLatestCrimeDate() {
   const result = await pool.request().query("SELECT MAX(date_occurred) AS lastDate FROM crimes");
   return result.recordset[0].lastDate; // null if empty
 }
+
+
+/*export async function checkSQLDB() {
+  try {
+    const result = await pool.request().query(`SELECT * FROM crimes 
+WHERE date_occurred <= '2023-01-01' AND date_occurred >= '2022-01-01'
+ORDER BY date_occurred DESC
+OFFSET 0 ROWS
+FETCH NEXT 50 ROWS ONLY;`
+)
+    console.log('Crimes found from 2022-24:', result);
+  } catch (err){
+    console.log('Error occured', err)
+  }
+}*/
+
+
+
+
 

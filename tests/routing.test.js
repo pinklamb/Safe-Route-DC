@@ -76,7 +76,6 @@ describe("POST /api/safetyScore", () => {
     expect(nightRes.body.score).toBeLessThan(eveningRes.body.score);
   });
 
-
 });
 
 

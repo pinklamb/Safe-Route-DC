@@ -69,24 +69,25 @@ function getDistForScore(lat1, lon1, lat2, lon2) {
 
 
 
-
 app.post("/api/safetyScore", async (req, res) => {
   try {
     const { route, start, timeOfDay, crimeData } = req.body;
+    console.log(crimeData)
 
     if (!route || !route.length) {
       return res.status(400).json({ error: "No route provided" });
     }
-
+// re
     // Use crimeData from request for testing, otherwise query DB
-    let crimes = [];
-    if (crimeData && Array.isArray(crimeData) && crimeData.length) {
+   let crimes = [];
+    if (crimeData && Array.isArray(crimeData)) {
       crimes = crimeData.map(c => ({
         latitude: c.lat,
         longitude: c.lng,
-        crime_type: c.crime_type
+        crime_type: c.crime_type,
       }));
     } else {
+      // fallback to querying SQL database
       const lats = route.map(p => p.lat);
       const lngs = route.map(p => p.lng);
       const minLat = Math.min(...lats);
@@ -160,14 +161,9 @@ app.post("/api/safetyScore", async (req, res) => {
     const safetyScore = Math.min(Math.round(100 * (1 - normalized)));
 
 
-    console.log(
-      "Distance (km):", routeDistanceKm.toFixed(2),
-      "| Crimes/km:", crimesPerKm.toFixed(2),
-      "| Score:", safetyScore
-    );
+    console.log("Distance (km):", routeDistanceKm.toFixed(2), "| Crimes/km:", crimesPerKm.toFixed(2), "| Score:", safetyScore);
 
-    res.json({ safetyScore, crimesPerKm });
-
+    res.json({ score: safetyScore, crimesPerKm });
   } catch (err) {
     console.error("Safety score error:", err);
     res.status(500).json({ error: "Failed to calculate safety score" });
