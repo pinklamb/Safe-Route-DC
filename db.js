@@ -151,7 +151,7 @@ export async function getLatestCrimeDate() {
 }
 
 
-/*export async function checkSQLDB() {
+export async function checkSQLDB() {
   try {
     const result = await pool.request().query(`SELECT * FROM crimes 
 WHERE date_occurred <= '2023-01-01' AND date_occurred >= '2022-01-01'
@@ -163,7 +163,7 @@ FETCH NEXT 50 ROWS ONLY;`
   } catch (err){
     console.log('Error occured', err)
   }
-}*/
+}
 
 
 

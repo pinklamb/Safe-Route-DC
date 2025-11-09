@@ -16,8 +16,8 @@ async function loadGoogleMaps() {
 
   // Initialize map
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 38.9226, lng: -77.0194 },
-    zoom: 16,
+    center: { lat: 38.9072, lng: -77.0369 },
+    zoom: 13,
   });
 
   infoWindow = new google.maps.InfoWindow();
@@ -35,7 +35,7 @@ async function loadGoogleMaps() {
 
   // Button click
   const locationButton = document.getElementById("routeButton");
-  locationButton.textContent = "Get Routes";
+  locationButton.textContent = "Find Routes";
   locationButton.classList.add("custom-map-control-button");
   map.controls[google.maps.ControlPosition.TOP_CENTER].push(locationButton);
 
@@ -45,7 +45,6 @@ async function loadGoogleMaps() {
     event.preventDefault();
     document.getElementById("routeButton").click(); // enter button 
   });
-
 
   locationButton.addEventListener("click", async (event) => {
     event.preventDefault();
