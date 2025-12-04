@@ -1,14 +1,31 @@
 import sql from "mssql";
 import { config } from "./config.js";
 
-export const pool = new sql.ConnectionPool({
-  user: config.DB_USER,
-  password: config.DB_PASSWORD,
-  server: config.DB_SERVER,
-  database: config.DB_NAME,
-  port: parseInt(config.DB_PORT, 10),
-  options: { encrypt: false, trustServerCertificate: true },
-});
+
+
+
+import sql from "mssql";
+import { config } from "./config.js";
+
+
+
+
+if (config.DATABASE_URL) {
+  let pool;
+  pool = new sql.ConnectionPool(config.DATABASE_URL);
+} else {
+  pool = new sql.ConnectionPool({
+    user: config.DB_USER,
+    password: config.DB_PASSWORD,
+    server: config.DB_SERVER,
+    database: config.DB_NAME,
+    port: parseInt(config.DB_PORT, 10),
+    options: { encrypt: false, trustServerCertificate: true },
+  });
+}
+
+export { pool };
+
 
 export async function initDB() {
   await pool.connect();
