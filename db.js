@@ -1,7 +1,6 @@
 import sql from "mssql";
 import { config } from "./config.js";
 
-// Create a single global pool using config values
 export const pool = new sql.ConnectionPool({
   user: config.DB_USER,
   password: config.DB_PASSWORD,
@@ -11,7 +10,6 @@ export const pool = new sql.ConnectionPool({
   options: { encrypt: false, trustServerCertificate: true },
 });
 
-// Initialize DB and create crimes table
 export async function initDB() {
   await pool.connect();
   console.log("Connected to SQL Server");
@@ -40,7 +38,6 @@ export async function initDB() {
 
 
 
-// Save or update a single crime
 export async function saveCrimeData(crime) {
   const { CCN, OFFENSE, REPORT_DAT, ADDRESS, LATITUDE, LONGITUDE } = crime;
   const request = pool.request();
@@ -82,7 +79,6 @@ export async function addCrimes(baseUrl) {
     const limit = 1000;
 
     while (true) {
-      // Append paging parameters
       const url = `${baseUrl}&resultOffset=${offset}&resultRecordCount=${limit}`;
       const response = await fetch(url);
       const data = await response.json();
@@ -134,7 +130,7 @@ export async function updateCrimesFromDC(sinceDate = null) {
       offset += limit;
       console.log(`Synced ${total} records so far...`);
 
-      // small delay to avoid overwhelming DC API
+      // small delay to avoid overwhelming crime api
       await new Promise((r) => setTimeout(r, 400));
     }
 
@@ -144,10 +140,10 @@ export async function updateCrimesFromDC(sinceDate = null) {
   }
 }
 
-// Get latest crime date in DB
+
 export async function getLatestCrimeDate() {
   const result = await pool.request().query("SELECT MAX(date_occurred) AS lastDate FROM crimes");
-  return result.recordset[0].lastDate; // null if empty
+  return result.recordset[0].lastDate;
 }
 
 

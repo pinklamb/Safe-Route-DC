@@ -1,21 +1,17 @@
 let currentUserLocation;
 
-export function getUserLocation() {
+export async function getUserLocation() {
   return new Promise((resolve, reject) => {
-    // if location is already saved
-    if (currentUserLocation) return resolve(currentUserLocation);
-
-    // Request location
+    localStorage.removeItem('currentUserLocation');
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const lon = pos.coords.longitude;
-          const lat = pos.coords.latitude;
-          currentUserLocation = { lng: lon, lat };
+          const { latitude: lat, longitude: lng } = pos.coords;
+          currentUserLocation = { lat, lng };
 
           const locationEl = document.getElementById("locationDisplay");
           if (locationEl) {
-            locationEl.textContent = `Longitude: ${lon.toFixed(4)}, Latitude: ${lat.toFixed(4)}`;
+            locationEl.textContent = `Longitude: ${lng.toFixed(4)}, Latitude: ${lat.toFixed(4)}`;
           }
 
           resolve(currentUserLocation);
@@ -32,6 +28,7 @@ export function getUserLocation() {
     }
   });
 }
+
 
 
 

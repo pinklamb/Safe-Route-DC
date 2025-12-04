@@ -16,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 
-// Serve static files
+
 app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (_, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -43,7 +43,6 @@ app.get("/api/crimes", async (req, res) => {
     const request = pool.request();
     inputs.forEach((i) => request.input(i.name, i.type, i.value));
     const result = await request.query(query);
-    console.log("Query returned:", result.recordset?.length, "rows");
     res.json(result.recordset);
   } catch (err) {
     console.error("Fetch error:", err);
@@ -67,17 +66,12 @@ function getDistForScore(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-
-
 app.post("/api/safetyScore", async (req, res) => {
   try {
     const { route, start, timeOfDay, crimeData } = req.body;
+    if (!route || route.length < 2) return res.status(400).json({ error: "No route provided" });
 
-    if (!route || !route.length) {
-      return res.status(400).json({ error: "No route provided" });
-    }
 
-  //get correct crime data from dummycrimes or sql query
     let crimes = [];
     if (crimeData && Array.isArray(crimeData)) {
       crimes = crimeData.map(c => ({
@@ -89,10 +83,8 @@ app.post("/api/safetyScore", async (req, res) => {
     } else {
       const lats = route.map(p => p.lat);
       const lngs = route.map(p => p.lng);
-      const minLat = Math.min(...lats);
-      const maxLat = Math.max(...lats);
-      const minLon = Math.min(...lngs);
-      const maxLon = Math.max(...lngs);
+      const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+      const minLon = Math.min(...lngs), maxLon = Math.max(...lngs);
 
       const result = await pool.request()
         .input("minLat", sql.Decimal(10, 7), minLat)
@@ -107,37 +99,30 @@ app.post("/api/safetyScore", async (req, res) => {
         `);
 
       crimes = result.recordset;
-      console.log("Query returned:", crimes.length, "crimes");
     }
 
-    // route distance
+    //Haversine distance
     const getDistanceKm = (lat1, lon1, lat2, lon2) => {
       const R = 6371;
       const toRad = deg => (deg * Math.PI) / 180;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRad(lat1)) *
-        Math.cos(toRad(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+      return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     };
 
     const routeDistanceKm = route.reduce((acc, point, i) => {
       if (i === 0) return 0;
-      const prev = route[i - 1];
+      const prev = route[i-1];
       return acc + getDistanceKm(prev.lat, prev.lng, point.lat, point.lng);
     }, 0);
 
-    const safeRouteDistanceKm = routeDistanceKm > 0 ? routeDistanceKm : 0.001;
+    const safeRouteDistanceKm = Math.max(routeDistanceKm, 0.1); // minimum 100m
 
-    // weighted crime count
     const crimeTypeWeights = {
       "HOMICIDE": 5,
       "SEX ABUSE": 4,
-      "ASSAULT WITH DANGEROUS WEAPON": 3,
+      "ASSAULT WITH DANGEROUS WEAPON": 4,
       "ROBBERY": 3,
       "MOTOR VEHICLE THEFT": 2,
       "THEFT/AUTO": 1.5,
@@ -145,72 +130,53 @@ app.post("/api/safetyScore", async (req, res) => {
     };
 
     const currentYear = 2025;
-    const yearDecay = 0.2; // each year older reduces weight by 0.2
-    const thresholdKm = 0.05;
+    const yearDecay = 0.3; 
+    const thresholdKm = 0.1; // 100 meters
 
     let weightedCrimeCount = 0;
+    const countedCrimes = new Set(); 
 
     for (const crime of crimes) {
       for (const point of route) {
         const dist = getDistanceKm(crime.latitude, crime.longitude, point.lat, point.lng);
         if (dist <= thresholdKm) {
-          const typeWeight = crimeTypeWeights[crime.crime_type.toUpperCase()] || 1;
-          // gets year from DB creates now js object in case format from DB is not correct, uses current year if no crime year found
-          const crimeYear = crime.year ? new Date(crime.year).getUTCFullYear() : currentYear; 
-          const yearWeight = Math.max(0.1, 1 - ((currentYear - (crimeYear || currentYear)) * yearDecay));
-          const weighted = typeWeight * yearWeight;
-          weightedCrimeCount += weighted;
+          const crimeId = `${crime.latitude}-${crime.longitude}-${crime.crime_type}`;
+          if (countedCrimes.has(crimeId)) break; 
+          countedCrimes.add(crimeId);
 
-          console.log(
-            `Crime: ${crime.crime_type} (${crimeYear}), Distance: ${dist.toFixed(3)} km, ` +
-            `TypeWeight: ${typeWeight}, YearWeight: ${yearWeight.toFixed(2)}, Weighted: ${weighted.toFixed(2)}, ` +
-            `Cumulative Weighted: ${weightedCrimeCount.toFixed(2)}`
-          );
-          break; // count each crime only once per route
+          const typeWeight = crimeTypeWeights[crime.crime_type.toUpperCase()] || 1;
+          const crimeYear = crime.year ? new Date(crime.year).getUTCFullYear() : currentYear;
+          const yearWeight = Math.max(0.1, 1 - ((currentYear - crimeYear) * yearDecay));
+
+          weightedCrimeCount += typeWeight * yearWeight;
+          break;
         }
       }
     }
 
+    //Time of day multiplier
     const hour = timeOfDay ?? start ?? new Date().getHours();
     let timeMultiplier = 1;
-    if (hour >= 18 && hour < 22) timeMultiplier = 1.3; // 30% added weight
-    else if (hour >= 22 || hour < 4) timeMultiplier = 1.7; // 50% added weight 
-    else if (hour >= 4 && hour < 6) timeMultiplier = 1.2; // 20% added weight
-
-
-    console.log("Weighted Crime Count before time multiplier:", weightedCrimeCount.toFixed(2));
+    if (hour >= 18 && hour < 22) timeMultiplier = 1.3;
+    else if (hour >= 22 || hour < 4) timeMultiplier = 1.7;
+    else if (hour >= 4 && hour < 6) timeMultiplier = 1.2;
 
     weightedCrimeCount *= timeMultiplier;
-    console.log("Weighted Crime Count after time multiplier:", weightedCrimeCount.toFixed(2));
 
     const crimesPerKm = weightedCrimeCount / safeRouteDistanceKm;
-    console.log("Route distance (km):", safeRouteDistanceKm.toFixed(3), "| Crimes per km:", crimesPerKm.toFixed(2));
 
-    const DECAY_FACTOR = 0.005;
-    const normalized = 1 - Math.exp(-DECAY_FACTOR * Math.min(crimesPerKm, 50));
-    const safetyScore = Math.min(Math.round(100 * (1 - normalized)));
+    // Safety score normalization 
+    const DECAY_FACTOR = 0.004;
+    const normalized = Math.min(1 - Math.exp(-DECAY_FACTOR * Math.min(crimesPerKm, 50)), 1);
+    const safetyScore = Math.max(0, Math.round(100 * (1 - normalized)));
 
-    console.log("Normalized:", normalized.toFixed(3), "| Safety Score:", safetyScore);
-
-
-
-    weightedCrimeCount *= timeMultiplier;
-
-    // crimes per km & normalizing them
-
-    console.log("Distance (km):", routeDistanceKm.toFixed(2),
-                "| Crimes/km:", crimesPerKm.toFixed(2),
-                "| Score:", safetyScore);
-
-    res.json({ safetyScore, crimesPerKm });
+    res.json({ safetyScore, crimesPerKm, routeDistanceKm });
 
   } catch (err) {
     console.error("Safety score error:", err);
     res.status(500).json({ error: "Failed to calculate safety score" });
   }
 });
-
-
 
 
 

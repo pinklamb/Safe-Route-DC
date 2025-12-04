@@ -10,13 +10,20 @@
 
   <div id="searchBox">
     <form id="routeForm">
-      <input
-        type="text"
-        id="startInput"
-        placeholder="Enter starting point"
-        autocomplete="off"
-        required
-      />
+      <div class="input-wrapper">
+        <input
+          type="text"
+          id="startInput"
+          placeholder="Enter starting point"
+          autocomplete="off"
+          required
+        />
+        <i class="fa-solid fa-location-arrow location-icon" style="color:#b776d5;"
+        title="Use my location"
+        alt="Use my location"
+        ></i>
+      </div>
+
       <input
         type="text"
         id="destinationInput"
@@ -24,22 +31,15 @@
         autocomplete="off"
         required
       />
-
       <button type="submit" id="routeButton"></button>
     </form>
     <ul id="autocompleteList"></ul>
-
-    <p id="locationDisplay">Start Location: Not yet requested</p>
     <p id="distanceDisplay"></p>
   </div>
 
   <div id="map"></div>
 
   <script type="module" src="./js/routing.js" defer></script>
+  <script src="https://kit.fontawesome.com/05c118857c.js" crossorigin="anonymous"></script>
 </body>
 </html>
-
-
-
-
-

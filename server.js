@@ -19,7 +19,7 @@ async function startServer() {
   }
 }
 
-// Only run server if not testing
+
 if (process.env.NODE_ENV !== "test") {
   startServer().catch(err => console.error("Server failed to start:", err));
 }
