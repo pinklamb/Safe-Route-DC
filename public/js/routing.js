@@ -1,6 +1,7 @@
 import { getUserLocation } from "./finduser.js";
 import { attachStartRouteButton, getRouteColor } from "./loadroutes.js";
 
+
 let map, directionsService, routeRenderers = [];
 let destinationAutocomplete, startAutocomplete;
 let directionsResponseGlobal;
@@ -22,11 +23,13 @@ async function loadGoogleMaps() {
     center: { lat: 38.9072, lng: -77.0369 },
     zoom: 12,
     mapTypeControl: false,
+    fullscreenControl: true,
     streetViewControl: false
   });
 
   directionsService = new google.maps.DirectionsService();
   const infoWindow = new google.maps.InfoWindow();
+
 
 
   const DC_BOUNDS = new google.maps.LatLngBounds(
@@ -138,7 +141,7 @@ async function geocodeAddress(address) {
   });
 }
 
-//make sure inputs are in DC only
+//DC only locations
 async function validateDC(latLng) {
   const geocoder = new google.maps.Geocoder();
   const results = await new Promise((resolve, reject) => {
@@ -229,41 +232,29 @@ async function calculateAndDisplayRoutes(origin, destination) {
   );
 }
 
-
 function addRouteInfoToUI(index, leg, safetyData) {
   const div = document.createElement("div");
   div.classList.add("route-card");
 
-  const safetyLabel = safetyData.safetyScore >= 80 ? "Safe" :
+  const safetyLabel =
+    safetyData.safetyScore >= 80 ? "Safe" :
     safetyData.safetyScore >= 65 ? "Moderate" :
-      safetyData.safetyScore >= 59 ? "Risky" : "Unsafe";
+    safetyData.safetyScore >= 59 ? "Risky" : "Unsafe";
 
   div.innerHTML = `
     <strong>Route ${index + 1}</strong><br>
     Distance: ${leg.distance.text}<br>
     Time: ${leg.duration.text}<br>
     Safety: <b style="color:${getRouteColor(safetyData.safetyScore)}">${safetyLabel}</b> (${safetyData.safetyScore.toFixed(1)}/100)<br>
-    Crimes per Km: ${safetyData.crimesPerKm.toFixed(1)}
+    Crimes per Km: ${safetyData.crimesPerKm.toFixed(1)}<br>
+    Weighted Crime Score: ${safetyData.weightedCrimeCount?.toFixed(1) ?? "N/A"}<br>
+    <small>Note: Crime density may appear high because the database contains over 200,000 incidents in DC.</small>
   `;
 
   attachStartRouteButton(div, index, safetyData, directionsResponseGlobal, map, routeRenderers);
   return div;
 }
 
+
 loadGoogleMaps();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

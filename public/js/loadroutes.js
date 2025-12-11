@@ -78,5 +78,3 @@ export function getRouteColor(score) {
   return "#e12e1aff"; 
 }
 
-
-

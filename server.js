@@ -1,27 +1,39 @@
 import app from "./app.js";
-import { initDB, getLatestCrimeDate, updateCrimesFromDC} from "./db.js";
+import { 
+  startDB, 
+  getLatestCrimeDate, 
+  updateCrimesFromDC
+} from "./db.js";
 
 const PORT = process.env.PORT || 4000;
 
 async function startServer() {
-  await initDB();
-  app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
 
-  // Only fetch crimes in production (not during tests)
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+  await startDB();
+  await updateCrimesFromDC();
   if (process.env.NODE_ENV !== "test") {
-    const lastDate = await getLatestCrimeDate();
-    await updateCrimesFromDC(lastDate);
+    try {
+      setInterval(async () => {
+        try {
+          const lastDate = await getLatestCrimeDate();
+          console.log("Starting hourly update from last crime date:", lastDate);
+          await updateCrimesFromDC();
+          console.log("Hourly update complete.");
+        } catch (err) {
+          console.error("Error updating crimes from DC:", err);
+        }
+      }, 3600000);
 
-    setInterval(async () => {
-      const lastDate = await getLatestCrimeDate();
-      await updateCrimesFromDC(lastDate);
-    }, 3600000);
+      console.log("Server will update crimes from DC every hour.");
+
+    } catch (err) {
+      console.error("Error setting up hourly updates:", err);
+    }
   }
 }
-
-
-if (process.env.NODE_ENV !== "test") {
-  startServer().catch(err => console.error("Server failed to start:", err));
-}
-
+startServer();
 export default app;
+

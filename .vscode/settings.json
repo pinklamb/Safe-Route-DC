@@ -1,3 +1,7 @@
 {
-  "liveServer.settings.multiRootWorkspaceName": "dc-crime-app"
+  "liveServer.settings.multiRootWorkspaceName": "dc-crime-app",
+  "dataworkspace.excludedProjects": [
+    "SafeRouteDCDB/SafeRouteDCDB.sqlproj",
+    "SafeRouteDC/SafeRouteDC.sqlproj"
+  ]
 }
