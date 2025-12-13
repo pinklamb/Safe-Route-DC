@@ -75,7 +75,7 @@ app.post("/api/safetyScore", async (req, res) => {
       return acc + getDistanceKm(prev.lat, prev.lng, point.lat, point.lng);
     }, 0);
 
-    const safeRouteDistanceKm = Math.max(routeDistanceKm, 1.0); // avoid div by 0
+    const safeRouteDistanceKm = Math.max(routeDistanceKm, 1.0); 
 
     const crimeTypeWeights = {
       "HOMICIDE": 5,
