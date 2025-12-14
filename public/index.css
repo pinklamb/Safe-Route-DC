@@ -6,6 +6,17 @@ body, html {
 }
 
 
+#progressText {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+
+
+map {
+  height: auto;
+  width: auto;
+}
 
 #searchBox {
   position: fixed;

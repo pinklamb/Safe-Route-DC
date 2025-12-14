@@ -1,11 +1,27 @@
+import path from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import sql from "mssql";
+import { pool } from "./db.js";
+
+
+
 
 const app = express();
 app.use(express.json());
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-let pool;
+
+
+app.use(express.static(path.join(__dirname, "public")));
+app.get("/", (_, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+
+
 export function setDbPool(dbPool) {
   pool = dbPool;
 }
@@ -22,10 +38,10 @@ app.post("/api/safetyScore", async (req, res) => {
 
     // Use injected crime data (for tests) 
     if (Array.isArray(crimeData)) {
-      crimes = crimeData.map(c => ({
-        latitude: c.lat,
-        longitude: c.lng,
-        crime_type: c.crime_type,
+      crimes = crimeData.map(crime => ({
+        latitude: crime.lat,
+        longitude: crime.lng,
+        crime_type: crime.crime_type,
         year: c.year || 2025,
       }));
     } else {
@@ -33,8 +49,8 @@ app.post("/api/safetyScore", async (req, res) => {
         return res.status(500).json({ error: "Database connection not ready" });
       }
 
-      const lats = route.map(p => p.lat);
-      const lngs = route.map(p => p.lng);
+      const lats = route.map(point => point.lat);
+      const lngs = route.map(point => point.lng);
 
       const buffer = 0.002;
       const minLat = Math.min(...lats) - buffer;
@@ -48,10 +64,10 @@ app.post("/api/safetyScore", async (req, res) => {
         .input("minLon", sql.Decimal(10, 7), minLon)
         .input("maxLon", sql.Decimal(10, 7), maxLon)
         .query(`
-          SELECT crime_type, lat AS latitude, lng AS longitude, YEAR(date_occurred) AS year
+          SELECT crime_type, latitude, longitude, YEAR(date_occurred) AS year
           FROM crimes
-          WHERE lat BETWEEN @minLat AND @maxLat
-            AND lng BETWEEN @minLon AND @maxLon
+          WHERE latitude BETWEEN @minLat AND @maxLat
+            AND longitude BETWEEN @minLon AND @maxLon
         `);
 
       crimes = result.recordset;
@@ -122,15 +138,15 @@ app.post("/api/safetyScore", async (req, res) => {
 
     const decayFactor = 0.001;
     const safetyScore = Math.max(0, Math.round(100 * Math.exp(-decayFactor * adjustedCrimeCount)));
-
-    res.json({
+    setTimeout(() => {
+      res.json({
       safetyScore,
       weightedCrimeCount,
       crimesPerKm,
       routeDistanceKm,
       timeMultiplier,
     });
-
+    },200);
   } catch (err) {
     console.error("Safety score error:", err);
     res.status(500).json({ error: "Failed to calculate safety score" });

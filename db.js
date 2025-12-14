@@ -133,8 +133,6 @@ export async function updateCrimesFromDC() {
         currentYear--;
         await new Promise(resolve => setTimeout(resolve, apiDelayMs));
     }
-
-    console.log(`Years to sync from API: ${years.join(' -> ')}`);
     for (const year of years) {
         total += await addCrimesToDB(year);
     }

@@ -1,7 +1,5 @@
-import request from "supertest";
+
 import app from "../app.js";
-
-
 const testRoutes = {
   unsafe: [
     { lat: 38.9230, lng: -77.0180 },

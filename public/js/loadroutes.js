@@ -29,7 +29,6 @@ export function attachStartRouteButton(routeCard, index, safetyData, directionsR
     });
     routeRenderers.push(renderer);
 
-    // Zoom to route
     const path = google.maps.geometry.encoding.decodePath(
       directionsResponseGlobal.routes[index].overview_polyline.points
     );

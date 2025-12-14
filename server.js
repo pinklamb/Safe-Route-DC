@@ -7,9 +7,10 @@ import {
 
 const PORT = process.env.PORT || 4000;
 
+
 async function startServer() {
 
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });
   await startDB();
@@ -34,6 +35,7 @@ async function startServer() {
     }
   }
 }
+
 startServer();
-export default app;
+
 
