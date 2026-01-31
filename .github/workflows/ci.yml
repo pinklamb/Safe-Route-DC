@@ -63,8 +63,8 @@
          with:
            aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
            aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-           application_name: nodejs-app-eb-gh-app
-           environment_name: Nodejs-app-eb-gh-app-env
+           application_name: SafeRouteProd
+           environment_name: SafeRouteProd-env-3
            version_label: ${{ github.sha }}
-           region: us-east-1
+           region: us-east-1b
            deployment_package: deploy.zip
