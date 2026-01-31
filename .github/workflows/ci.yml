@@ -9,7 +9,12 @@
    jobs:
      test:
        runs-on: ubuntu-latest
-
+       env:
+         DB_SERVER: ${{ secrets.DB_SERVER }}
+         DB_USER: ${{ secrets.DB_USER }}
+         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+         DB_NAME: ${{ secrets.DB_NAME }}
+         DB_PORT: ${{ secrets.DB_PORT }}
        strategy:
          matrix:
            node-version: [18.x, 20.x]
@@ -36,6 +41,13 @@
      deploy:
        needs: test
        runs-on: ubuntu-latest
+       env:
+        DB_SERVER: ${{ secrets.DB_SERVER }}
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+        DB_PORT: ${{ secrets.DB_PORT }}
+
        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
        steps:
