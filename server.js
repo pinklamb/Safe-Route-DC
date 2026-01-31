@@ -36,5 +36,6 @@ async function startServer() {
 }
 
 startServer();
+console.log("DB_SERVER", config.DB_SERVER)
 
 
