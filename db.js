@@ -1,11 +1,13 @@
 import sql from "mssql";
 import { config } from "./config.js";
 
-const baseYear = 2025;
-const baseLayerId = 7;
+const crimeBaseYear = 2025;
+const crimeYearId = 7;
 const reqLimit = 1000;
-const apiDelayMs = 300;
-const outFields = "CCN,REPORT_DAT,OFFENSE,LATITUDE,LONGITUDE,XBLOCK,YBLOCK";
+const apiDelayMs = 200;
+const crimeOutfields = "CCN,REPORT_DAT,OFFENSE,LATITUDE,LONGITUDE,XBLOCK,YBLOCK";
+
+
 
 export const pool = new sql.ConnectionPool({
     user: config.DB_USER,
@@ -16,13 +18,16 @@ export const pool = new sql.ConnectionPool({
     options: { encrypt: false, trustServerCertificate: true }
 });
 
-function getLayerIdForYear(year = baseYear) {
-    return baseLayerId + (year - baseYear);
+function getLayerIdForYear(year = crimeBaseYear) {
+    return crimeYearId + (year - crimeBaseYear);
 }
 
-function buildCrimeApiUrl(layerId, offset, limit, outFields) {
-    return `https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/FeatureServer/${layerId}/query?where=1%3D1&outFields=${outFields}&outSR=4326&returnGeometry=false&resultOffset=${offset}&resultRecordCount=${limit}&f=json`;
+function buildCrimeApiUrl(layerId, offset, limit, crimeOutfields) {
+    return `https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/FeatureServer/${layerId}/query?where=1%3D1&crimeOutfields=${crimeOutfields}&outSR=4326&returnGeometry=false&resultOffset=${offset}&resultRecordCount=${limit}&f=json`;
 }
+
+
+
 
 async function offloadReq(url) {
     const res = await fetch(url);
@@ -40,9 +45,22 @@ async function checkLayerExistence(year) {
 
 export async function startDB() {
     await pool.connect();
-    console.log("Connected to DB");
+    console.log("Successful Database Connection.");
+    const crimeCountResult = await pool.request().query(`SELECT COUNT(*) AS count FROM crimes`);
+    const crimeCount = crimeCountResult.recordset[0].count;
 
-    await pool.request().query(`
+    if (crimeCount === 0) {
+        console.log("Crimes table empty, syncing crimes from DC...");
+        await updateCrimesFromDC();
+    } else {
+        console.log(`Crimes table already has ${crimeCount} records, skipping initial sync.`);
+    }
+
+
+}
+
+export async function saveCrimeData(crime) {
+     await pool.request().query(`
         IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'crimes')
         BEGIN
             CREATE TABLE crimes (
@@ -57,11 +75,6 @@ export async function startDB() {
             );
         END
     `);
-
-    console.log("DB setup complete");
-}
-
-export async function saveCrimeData(crime) {
     const { CCN, OFFENSE, REPORT_DAT, ADDRESS, LATITUDE, LONGITUDE, XBLOCK, YBLOCK } = crime;
     const request = pool.request();
     const addr = ADDRESS || (XBLOCK && YBLOCK ? `Block X:${XBLOCK}, Y:${YBLOCK}` : "Address Data Unavailable");
@@ -94,7 +107,7 @@ export async function saveCrimeData(crime) {
         .query(q);
 }
 
-export async function addCrimesToDB(year = baseYear) {
+export async function addCrimesToDB(year = crimeBaseYear) {
     let total = 0;
     let offset = 0;
     const layerId = getLayerIdForYear(year);
@@ -102,7 +115,7 @@ export async function addCrimesToDB(year = baseYear) {
     console.log(`\nSyncing year ${year} (layer ${layerId})...`);
 
     while (true) {
-        const url = buildCrimeApiUrl(layerId, offset, reqLimit, outFields);
+        const url = buildCrimeApiUrl(layerId, offset, reqLimit, crimeOutfields);
         const crimesBatch = await offloadReq(url);
 
         if (crimesBatch.length === 0) break;
@@ -124,7 +137,7 @@ export async function addCrimesToDB(year = baseYear) {
 export async function updateCrimesFromDC() {
     let total = 0;
     const years = [];
-    let currentYear = baseYear;
+    let currentYear = crimeBaseYear;
     const latestDate = await getLatestCrimeDate();
     const latestYearInDB = latestDate ? new Date(latestDate).getFullYear() : null;
     console.log(`Latest year in DB: ${latestYearInDB ?? "none"}`);
@@ -140,6 +153,8 @@ export async function updateCrimesFromDC() {
     console.log(`\nSync complete. Total records added: ${total}`);
     return total;
 }
+
+
 export async function getLatestCrimeDate() {
     const request = pool.request();
 
@@ -156,4 +171,6 @@ export async function getLatestCrimeDate() {
         return null;
     }
 }
+
+
 

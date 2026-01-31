@@ -1,3 +1,6 @@
+
+
+
 export function attachStartRouteButton(routeCard, index, safetyData, directionsResponseGlobal, map, routeRenderers) {
   const startBtn = document.createElement("button");
   startBtn.textContent = "Start Route";
@@ -68,6 +71,8 @@ export function attachStartRouteButton(routeCard, index, safetyData, directionsR
     routeRenderers.push(panelRenderer);
   });
 }
+
+
 
 
 export function getRouteColor(score) {

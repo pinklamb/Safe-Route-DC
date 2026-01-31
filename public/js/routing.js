@@ -272,19 +272,44 @@ async function calculateAndDisplayRoutes(origin, destination) {
 
 
 function addRouteInfoToUI(index, leg, safetyData) {
+  let explanations = [];
+  const timeMultiplier = safetyData.timeOfDay
+  const weightedCrimeCount = safetyData.weightedCrimeCount
   const div = document.createElement("div");
   div.classList.add("route-card");
 
+  if (timeMultiplier === 1.6) {
+  explanations.push("Later hours increase overall weighting.");
+  }
+  
+  if (weightedCrimeCount >= 1000) {
+    explanations.push("High concentration of reported incidents influenced the score.");
+  } else if (weightedCrimeCount >= 400) {
+    explanations.push("Moderate number of reported incidents influenced the score.");
+  } else {
+    explanations.push("No significant factors affected this route's score.");
+  }
+
+  const explanation = explanations.join("; ");
+
+
+
+
   const safetyLabel =
-    safetyData.safetyScore >= 80 ? "Safe" :
-    safetyData.safetyScore >= 65 ? "Moderate" :
-    safetyData.safetyScore >= 59 ? "Risky" : "Unsafe";
+  safetyData.safetyScore >= 75 ? "Low concern" :
+  safetyData.safetyScore >= 60 ? "Moderate concern" :
+  safetyData.safetyScore >= 55 ? "Use caution" :
+  "Be aware";
+
  
   div.innerHTML = `
     <strong>Route ${index + 1}</strong><br>
     Distance: ${leg.distance.text}<br>
     Time: ${leg.duration.text}<br>
-    Safety: <b style="color:${getRouteColor(safetyData.safetyScore)}">${safetyLabel}</b> (${safetyData.safetyScore.toFixed(1)}/100)<br>`
+    Safety: <b style="color:${getRouteColor(safetyData.safetyScore)}">${safetyLabel}</b> (${safetyData.safetyScore.toFixed(1)}/100)<br>
+    <b style="display:block; margin-top:5px;">${explanation}</b>
+  `;
+
   attachStartRouteButton(div, index, safetyData, directionsResponseGlobal, map, routeRenderers);
   return div;
 }
