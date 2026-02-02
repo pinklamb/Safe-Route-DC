@@ -2,9 +2,9 @@
 
    on:
      push:
-       branches: [ main, master ]
+       branches: [ main ]
      pull_request:
-       branches: [ main, master ]
+       branches: [ main ]
 
    jobs:
      test:
@@ -15,18 +15,17 @@
          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
          DB_NAME: ${{ secrets.DB_NAME }}
          DB_PORT: ${{ secrets.DB_PORT }}
-       strategy:
-         matrix:
-           node-version: [18.x, 20.x]
+
+      
 
        steps:
        - name: Checkout code
          uses: actions/checkout@v4
-
-       - name: Setup Node.js ${{ matrix.node-version }}
+       - name: Setup Node.js 
          uses: actions/setup-node@v4
          with:
-           node-version: ${{ matrix.node-version }}
+           node-version: 20
+           name: Generate Deployment Package
            cache: 'npm'
 
        - name: Install dependencies
