@@ -13,13 +13,13 @@ export const pool = new sql.ConnectionPool({
     user: config.DB_USER,
     password: config.DB_PASSWORD,
     server: config.DB_SERVER,
-    database: config.DB_NAME,
+    database: config.DATABASE,
     port: parseInt(config.DB_PORT, 10),
     options: { encrypt: false, trustServerCertificate: true }
 });
 
 
-console.log("DB_SERVER", config.DB_SERVER)
+
 function getLayerIdForYear(year = crimeBaseYear) {
     return crimeYearId + (year - crimeBaseYear);
 }
