@@ -1,4 +1,5 @@
 import app from "./app.js";
+import "dotenv/config";
 import { 
   startDB, 
   getLatestCrimeDate, 
