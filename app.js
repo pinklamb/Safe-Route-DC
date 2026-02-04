@@ -22,14 +22,6 @@ app.get("/", (_, res) => {
 
 
 
-export function setDbPool(dbPool) {
-  pool = dbPool;
-}
-
-
-
-
-
 
 
 
@@ -149,8 +141,6 @@ app.post("/api/safetyScore", async (req, res) => {
 
     
 
-
-
     const decayFactor = 0.0004;
     const safetyScore = Math.max(0, Math.round(100 * Math.exp(-decayFactor * adjustedCrimeCount)));
     console.log("weightedCrimeCount:"+ weightedCrimeCount, "countedCrimes:"+ countedCrimes.size,
@@ -163,7 +153,6 @@ safetyScore)
       timeOfDay: timeOfDay ?? start ?? new Date().getHours(),
 
     })
-
 
 
 
