@@ -13,7 +13,6 @@ export const pool = new sql.ConnectionPool({
     user: config.DB_USER,
     password: config.DB_PASSWORD,
     server: config.DB_SERVER,
-    database: config.DATABASE,
     port: parseInt(config.DB_PORT, 10),
     options: { encrypt: false, trustServerCertificate: true }
 });
