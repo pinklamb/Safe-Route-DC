@@ -17,9 +17,9 @@ async function startServer() {
 }
 
  async function scheduleUpdate() {
-    if (process.env.NODE_ENV === "test") return;
-  await startDB();
+  
     try {
+      await startDB();
       const lastDate = await getLatestCrimeDate();
       console.log("Starting update from:", lastDate);
       await updateCrimesFromDC();
@@ -29,9 +29,9 @@ async function startServer() {
     } finally {
       setTimeout(scheduleUpdate, 3600000);
     }
-  }
+}
 
-await scheduleUpdate();
+
 startServer();
 
 
