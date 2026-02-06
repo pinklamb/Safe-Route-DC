@@ -1,8 +1,8 @@
 import sql from "mssql";
 import { config } from "./config.js";
 
-const baseYear = 2025;
-const baseLayerId = 7;
+const crimeBaseYear = 2025;
+const crimeYearId = 7;
 const reqLimit = 1000;
 
 
@@ -11,18 +11,22 @@ export const pool = new sql.ConnectionPool({
     user: config.DB_USER,
     password: config.DB_PASSWORD,
     server: config.DB_SERVER,
-    database: config.DB_NAME,
     port: parseInt(config.DB_PORT, 10),
     options: { encrypt: false, trustServerCertificate: true }
 });
 
-function getLayerIdForYear(year = baseYear) {
-    return baseLayerId + (year - baseYear);
+
+
+function getLayerIdForYear(year = crimeBaseYear) {
+    return crimeYearId + (year - crimeBaseYear);
 }
 
 function buildCrimeApiUrl(layerId, offset, limit) {
     return `https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/FeatureServer/${layerId}/query?where=1%3D1&outFields=CCN,REPORT_DAT,OFFENSE,LATITUDE,LONGITUDE,XBLOCK,YBLOCK&outSR=4326&returnGeometry=false&resultOffset=${offset}&resultRecordCount=${limit}&f=json`;
 }
+
+
+
 
 async function offloadReq(url) {
     const res = await fetch(url);
@@ -39,13 +43,23 @@ async function checkLayerExistence(year) {
 }
 
 export async function startDB() {
-    try {
-        await pool.connect();
-        console.log("Connected to SQL Server.");
-    } catch (error) {
-        console.log("Failed to Connect to Database.", error)
+    await pool.connect();
+    console.log("Successful Database Connection.");
+    const crimeCountResult = await pool.request().query(`SELECT COUNT(*) AS count FROM crimes`);
+    const crimeCount = crimeCountResult.recordset[0].count;
+
+    if (crimeCount === 0) {
+        console.log("Crimes table empty, syncing crimes from DC...");
+        await updateCrimesFromDC();
+    } else {
+        console.log(`Crimes table already has ${crimeCount} records, skipping initial sync.`);
     }
-    await pool.request().query(`
+
+
+}
+
+export async function saveCrimeData(crime) {
+     await pool.request().query(`
         IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'crimes')
         BEGIN
             CREATE TABLE crimes (
@@ -60,11 +74,6 @@ export async function startDB() {
             );
         END
     `);
-
-    console.log("DB setup complete");
-}
-
-export async function saveCrimeData(crime) {
     const { CCN, OFFENSE, REPORT_DAT, ADDRESS, LATITUDE, LONGITUDE, XBLOCK, YBLOCK } = crime;
 
     if (LATITUDE == null || LONGITUDE == null) return;
@@ -91,20 +100,15 @@ export async function saveCrimeData(crime) {
     `);
 }
 
-
-
-
-export async function addCrimesToDB(year = baseYear) {
-    let totalInserted = 0;
-    const countResult = await pool.request()
-    .input("year", sql.Int, year)
-    .query("SELECT COUNT(*) as currentCount FROM crimes WHERE YEAR(date_occurred) = @year");
+export async function addCrimesToDB(year = crimeBaseYear) {
+  
+    console.log(`\nSyncing year ${year} (layer ${layerId})...`);
 
     let offset = countResult.recordset[0].currentCount; 
     console.log(`Resuming year ${year} from offset ${offset}`);
     let layerId = getLayerIdForYear(year)
     while (true) {
-        const url = buildCrimeApiUrl(layerId, offset, reqLimit);
+        const url = buildCrimeApiUrl(layerId, offset, reqLimit, crimeOutfields);
         const crimesBatch = await offloadReq(url);
 
         if (crimesBatch.length === 0) break;
@@ -175,4 +179,6 @@ export async function getLatestCrimeDate() {
     });
     return counts;
 }
+
+
 

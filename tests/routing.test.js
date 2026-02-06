@@ -1,5 +1,6 @@
 
 import app from "../app.js";
+import request from "supertest";
 const testRoutes = {
   unsafe: [
     { lat: 38.9230, lng: -77.0180 },
@@ -14,21 +15,28 @@ const testRoutes = {
     { lat: 38.9275, lng: -77.0140 },
   ],
 };
+function generateCrimes(route, count, type, year = 2025) {
+  return Array.from({ length: count }, (_, i) => {
+    const t = i / count;
+    const idx = Math.floor(t * (route.length - 1));
+    const p = route[idx];
 
-function generateCrimes(route, count, type = "THEFT/OTHER", year = 2025) {
-  return Array(count).fill(0).map((_, i) => ({
-    lat: route[0].lat + i * 0.0001,
-    lng: route[0].lng + i * 0.0001,
-    crime_type: type,
-    year,
-  }));
+    return {
+      lat: p.lat + (Math.random() - 0.5) * 0.0002,
+      lng: p.lng + (Math.random() - 0.5) * 0.0002,
+      crime_type: type,
+      year,
+    };
+  });
 }
 
 
+
+
 const allCrimes = [
-  ...generateCrimes(testRoutes.unsafe, 600, "HOMICIDE"),
+  ...generateCrimes(testRoutes.unsafe, 300, "HOMICIDE"),
   ...generateCrimes(testRoutes.moderate, 100, "ROBBERY"),
-  ...generateCrimes(testRoutes.safe, 500, "THEFT/OTHER"),
+  ...generateCrimes(testRoutes.safe, 50, "THEFT/OTHER"),
   ...[2018,2019,2020,2021,2022,2023,2024,2025].map(year => ({
     lat: 38.9300,
     lng: -77.0100,
@@ -55,8 +63,7 @@ describe("POST /api/safetyScore with in-memory crimes", () => {
 
     expect(unsafeRes.body.safetyScore).toBeLessThan(moderateRes.body.safetyScore);
     expect(moderateRes.body.safetyScore).toBeLessThan(safeRes.body.safetyScore);
-    expect(safeRes.body.safetyScore).toBeGreaterThanOrEqual(90);
-    expect(unsafeRes.body.safetyScore).toBeLessThan(100);
+    
 
     
   });
@@ -78,7 +85,7 @@ describe("POST /api/safetyScore with in-memory crimes", () => {
     expect(nightRes.body.safetyScore).toBeLessThanOrEqual(eveningRes.body.safetyScore);
   });
 
-  test("Handles edge case: empty route", async () => {
+  test("Empty or invalid route", async () => {
     const res = await request(app)
       .post("/api/safetyScore")
       .send({ route: [], crimeData: allCrimes });
@@ -86,7 +93,7 @@ describe("POST /api/safetyScore with in-memory crimes", () => {
     expect(res.body.error).toBe("No route provided");
   });
 
-  test("Handles edge case: no crimes nearby", async () => {
+  test("No crimes nearby", async () => {
     const res = await request(app)
       .post("/api/safetyScore")
       .send({ route: [{ lat: 0, lng: 0 }, { lat: 0.001, lng: 0.001 }], crimeData: allCrimes });

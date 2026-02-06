@@ -2,14 +2,13 @@ import app from "./app.js";
 import { 
   startDB, 
   getLatestCrimeDate, 
-  updateCrimesFromDC
+  updateCrimesFromDC,
 } from "./db.js";
 
 const PORT = process.env.PORT || 4000;
 
 
 async function startServer() {
-
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });
@@ -33,5 +32,6 @@ async function startServer() {
 
 
 startServer();
+
 
 
