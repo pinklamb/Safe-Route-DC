@@ -23,8 +23,11 @@ app.get("/", (_, res) => {
 
 
 
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> 93188010d429c73ccc5ddb02ba4d9f77b15b1b44
 
 app.post("/api/safetyScore", async (req, res) => {
   try {

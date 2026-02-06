@@ -316,4 +316,3 @@ function addRouteInfoToUI(index, leg, safetyData) {
 
 
 loadGoogleMaps();
-
