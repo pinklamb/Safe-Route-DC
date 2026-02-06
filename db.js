@@ -5,7 +5,7 @@ const baseYear = 2025;
 const baseLayerId = 7;
 const reqLimit = 1000;
 const apiDelayMs = 300;
-const outFields = "CCN,REPORT_DAT,OFFENSE,LATITUDE,LONGITUDE,XBLOCK,YBLOCK";
+
 
 export const pool = new sql.ConnectionPool({
     user: config.DB_USER,
@@ -20,8 +20,8 @@ function getLayerIdForYear(year = baseYear) {
     return baseLayerId + (year - baseYear);
 }
 
-function buildCrimeApiUrl(layerId, offset, limit, outFields) {
-    return `https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/FeatureServer/${layerId}/query?where=1%3D1&outFields=${outFields}&outSR=4326&returnGeometry=false&resultOffset=${offset}&resultRecordCount=${limit}&f=json`;
+function buildCrimeApiUrl(layerId, offset, limit) {
+    return `https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/FeatureServer/${layerId}/query?where=1%3D1&outFields=CCN,REPORT_DAT,OFFENSE,LATITUDE,LONGITUDE,XBLOCK,YBLOCK&outSR=4326&returnGeometry=false&resultOffset=${offset}&resultRecordCount=${limit}&f=json`;
 }
 
 async function offloadReq(url) {
@@ -33,15 +33,18 @@ async function offloadReq(url) {
 
 async function checkLayerExistence(year) {
     const layerId = getLayerIdForYear(year);
-    const url = buildCrimeApiUrl(layerId, 0, 1, "CCN");
+    const url = buildCrimeApiUrl(layerId, 0, 1);
     const features = await offloadReq(url);
     return features.length > 0;
 }
 
 export async function startDB() {
-    await pool.connect();
-    console.log("Connected to DB");
-
+    try {
+        await pool.connect();
+        console.log("Connected to SQL Server.");
+    } catch (error) {
+        console.log("Failed to Connect to Database.", error)
+    }
     await pool.request().query(`
         IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'crimes')
         BEGIN

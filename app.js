@@ -22,9 +22,7 @@ app.get("/", (_, res) => {
 
 
 
-export function setDbPool(dbPool) {
-  pool = dbPool;
-}
+
 
 app.post("/api/safetyScore", async (req, res) => {
   try {
