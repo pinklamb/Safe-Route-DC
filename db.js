@@ -49,7 +49,7 @@ export async function startDB() {
     const crimeCountResult = await pool.request().query(`SELECT COUNT(*) AS count FROM crimes`);
     const crimeCount = crimeCountResult.recordset[0].count;
 
-    if (crimeCount === 0) {
+    if (crimeCount <= 290000) {
         console.log("Crimes table empty, syncing crimes from DC...");
         await updateCrimesFromDC();
     } else {
@@ -102,14 +102,13 @@ export async function saveCrimeData(crime) {
 }
 
 export async function addCrimesToDB(year = crimeBaseYear) {
-  
+    let layerId = getLayerIdForYear(year)
     console.log(`\nSyncing year ${year} (layer ${layerId})...`);
-
+    const countResult = await pool.request().query(`SELECT COUNT(*) AS currentCount FROM crimes WHERE YEAR(date_occurred) = ${year}`);
     let offset = countResult.recordset[0].currentCount; 
     console.log(`Resuming year ${year} from offset ${offset}`);
-    let layerId = getLayerIdForYear(year)
     while (true) {
-        const url = buildCrimeApiUrl(layerId, offset, reqLimit, crimeOutfields);
+        const url = buildCrimeApiUrl(layerId, offset, reqLimit);
         const crimesBatch = await offloadReq(url);
 
         if (crimesBatch.length === 0) break;
@@ -155,7 +154,7 @@ export async function updateCrimesFromDC() {
         totalInserted += inserted;
     }
 
-    console.log(`\nSync complete. Total records added: ${totalInserted}`);
+    console.log('Sync complete.');
 }
 
 
