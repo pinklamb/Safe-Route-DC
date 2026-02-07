@@ -12,11 +12,10 @@ async function startServer() {
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });
-  scheduleUpdate();
+ 
 }
 
  async function scheduleUpdate() {
-  
     try {
       await startDB();
       const lastDate = await getLatestCrimeDate();
@@ -32,6 +31,6 @@ async function startServer() {
 
 
 startServer();
-
+scheduleUpdate();
 
 
