@@ -6,16 +6,16 @@ import {
 } from "./db.js";
 
 const PORT = process.env.PORT || 4000;
-
+const HOST = "0.0.0.0";
 
 async function startServer() {
-  app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`Server running at http://${HOST}:${PORT}`);
   });
  
 }
 
- async function scheduleUpdate() {
+async function scheduleUpdate() {
     try {
       await startDB();
       const lastDate = await getLatestCrimeDate();

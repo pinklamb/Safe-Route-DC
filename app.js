@@ -101,7 +101,6 @@ app.post("/api/safetyScore", async (req, res) => {
       "THEFT/AUTO": 2,
       "THEFT/OTHER": 2,
     };
-    let explanations = [];
     const currentYear = 2025;
     const thresholdKm = 0.18;
     let weightedCrimeCount = 0;
@@ -141,8 +140,6 @@ app.post("/api/safetyScore", async (req, res) => {
 
     const decayFactor = 0.0004;
     const safetyScore = Math.max(0, Math.round(100 * Math.exp(-decayFactor * adjustedCrimeCount)));
-    console.log("weightedCrimeCount:"+ weightedCrimeCount, "countedCrimes:"+ countedCrimes.size,
-safetyScore)
     res.json({
     safetyScore,
     weightedCrimeCount,
