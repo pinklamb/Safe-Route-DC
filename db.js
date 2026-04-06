@@ -47,11 +47,7 @@ export async function startDB() {
     await pool.connect();
     console.log("Successful Database Connection.");
     const crimeCountResult = await pool.request().query(`SELECT COUNT(*) AS count FROM crimes`);
-    const crimeCount = crimeCountResult.recordset[0].count;
-
- 
-    console.log(`Crimes table already has ${crimeCount} records, skipping initial sync.`);
- 
+   
 
 
 }
@@ -74,29 +70,24 @@ async function saveCrimeData(crimesBatch) {
 
   
   for (const crime of crimesBatch) {
-    const { CCN, OFFENSE, REPORT_DAT, ADDRESS, LATITUDE, LONGITUDE, XBLOCK, YBLOCK } = crime.attributes;
+    const { CCN, OFFENSE, REPORT_DAT, LATITUDE, LONGITUDE,} = crime.attributes;
 
-    const addr =
-      ADDRESS ||
-      (XBLOCK && YBLOCK ? `Block X:${XBLOCK}, Y:${YBLOCK}` : "Address Data Unavailable");
-
+ 
     await request
       .input("id", sql.NVarChar, CCN)
       .input("type", sql.NVarChar, OFFENSE)
       .input("date", sql.DateTime, new Date(REPORT_DAT))
-      .input("addr", sql.NVarChar, addr)
       .input("lat", sql.Decimal(10,7), LATITUDE)
       .input("lng", sql.Decimal(10,7), LONGITUDE)
-      .input("raw", sql.NVarChar, JSON.stringify(crime.attributes))
       .query(`
         INSERT INTO #CrimesStage
-          (crime_id, crime_type, date_occurred, address, latitude, longitude, raw_data)
+          (crime_id, crime_type, date_occurred,  latitude, longitude)
         VALUES
-          (@id, @type, @date, @addr, @lat, @lng, @raw);
+          (@id, @type, @date, @lat, @lng);
       `);
-  }
+    }
 
- 
+  // 
   await request.query(`
     MERGE crimes AS target
     USING #CrimesStage AS source
@@ -105,20 +96,16 @@ async function saveCrimeData(crimesBatch) {
       UPDATE SET
         crime_type = source.crime_type,
         date_occurred = source.date_occurred,
-        address = source.address,
         latitude = source.latitude,
-        longitude = source.longitude,
-        raw_data = source.raw_data
+        longitude = source.longitude
     WHEN NOT MATCHED THEN
-      INSERT (crime_id, crime_type, date_occurred, address, latitude, longitude, raw_data)
+      INSERT (crime_id, crime_type, date_occurred, latitude, longitude)
       VALUES (
         source.crime_id,
         source.crime_type,
         source.date_occurred,
-        source.address,
         source.latitude,
-        source.longitude,
-        source.raw_data
+        source.longitude
       );
   `);
 }
@@ -163,6 +150,7 @@ export async function updateCrimesFromDC() {
     const startYear = 2018;
     const endYear = 2025;
 
+    
     for (let year = startYear; year <= endYear; year++) {
         if (yearsCount[year] && yearsCount[year] >= 20000) {
             console.log(`Skipping year ${year}: already has ${yearsCount[year]} records`);
@@ -184,10 +172,6 @@ export async function updateCrimesFromDC() {
 }
 
 
-
-
-
-
 export async function getLatestCrimeDate() {
     const request = pool.request();
 
@@ -203,6 +187,3 @@ export async function getLatestCrimeDate() {
     });
     return counts;
 }
-
-
-

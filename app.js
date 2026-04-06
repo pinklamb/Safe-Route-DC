@@ -26,7 +26,7 @@ app.get("/", (_, res) => {
 
 app.post("/api/safetyScore", async (req, res) => {
   try {
-    const { route, start, timeOfDay, crimeData } = req.body;
+    const { route, timeOfDay, crimeData } = req.body;
 
     if (!route || route.length < 2) {
       return res.status(400).json({ error: "No route provided" });
@@ -90,7 +90,7 @@ app.post("/api/safetyScore", async (req, res) => {
       return acc + getDistanceKm(prev.lat, prev.lng, point.lat, point.lng);
     }, 0);
 
-    const safeRouteDistanceKm = Math.max(routeDistanceKm,1.0); 
+    const safeRouteDistanceKm = Math.max(routeDistanceKm, 1.0); 
 
     const crimeTypeWeights = {
       "HOMICIDE": 5,
@@ -123,29 +123,18 @@ app.post("/api/safetyScore", async (req, res) => {
         }
       }
     }
-    const hour = timeOfDay ?? start ?? new Date().getHours();
-    let timeMultiplier = 1.0;
-    if (hour >= 6 && hour < 18) timeMultiplier = 1.0;
-    else if (hour >= 18 && hour < 22) timeMultiplier = 1.3;
-    else timeMultiplier = 1.6;
-
-   
-
-
     
-    const crimesPerKm = weightedCrimeCount / safeRouteDistanceKm;
-    const adjustedCrimeCount = crimesPerKm * timeMultiplier;
+    const weightedPerKm = weightedCrimeCount / safeRouteDistanceKm;
+
 
     
 
     const decayFactor = 0.0004;
-    const safetyScore = Math.max(0, Math.round(100 * Math.exp(-decayFactor * adjustedCrimeCount)));
+    const safetyScore = Math.max(0, Math.round(100 * Math.exp(-decayFactor * weightedPerKm)));
     res.json({
     safetyScore,
-    weightedCrimeCount,
-    crimesPerKm,
-      routeDistanceKm,
-      timeOfDay: timeOfDay ?? start ?? new Date().getHours(),
+    weightedPerKm,
+      routeDistanceKm
 
     })
 
