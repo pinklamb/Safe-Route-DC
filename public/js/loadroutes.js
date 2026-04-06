@@ -77,7 +77,7 @@ export function attachStartRouteButton(routeCard, index, safetyData, directionsR
 
 export function getRouteColor(score) {
   if (score >= 85) return "rgb(11, 109, 52)";  
-  if (score >= 65) return "rgb(190, 155, 17)";  
+  if (score >= 65) return "rgb(249, 207, 56)";  
   if (score >= 40) return "rgb(193, 96, 12)";  
-  return "rgb(186, 33, 16)"; 
+  return "rgb(126, 6, 6)"; 
 }

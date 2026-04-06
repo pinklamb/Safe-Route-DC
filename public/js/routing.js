@@ -175,7 +175,7 @@ function clearOldRoutes() {
 
 
 function showProgressAnimation() {
-  const circle = document.getElementById("progressCircle");
+ const circle = document.getElementById("progressCircle");
   const text = document.getElementById("progressText");
 
   loadingCircle = gsap.fromTo(circle, 
@@ -191,7 +191,7 @@ function showProgressAnimation() {
 
 
 
-
+const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
 
 async function calculateAndDisplayRoutes(origin, destination) {
   try {
@@ -231,10 +231,10 @@ async function calculateAndDisplayRoutes(origin, destination) {
           <circle id="progressCircle" cx="50" cy="50" r="45" stroke="#bd6ad6ff" stroke-width="10" fill="none"
                   stroke-dasharray="283" stroke-dashoffset="283"/>
         </svg>
-        <span id="progressText">Calculating...</span>
+        <span id="progressText"></span>
       `;
-
       showProgressAnimation();
+      await tick();
       const routeCards = [];
 
       for (let i = 0; i < response.routes.length; i++) {
@@ -242,11 +242,12 @@ async function calculateAndDisplayRoutes(origin, destination) {
         const leg = route.legs[0];
         const path = google.maps.geometry.encoding.decodePath(route.overview_polyline);
         const routeCoords = path.map(p => ({ lat: p.lat(), lng: p.lng() }));
+
         const originCoords = origin.lat && origin.lng ? origin : { lat: origin.lat(), lng: origin.lng() };
         const safetyData = await fetch("/api/safetyScore", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ route: routeCoords, start: originCoords }),
+        body: JSON.stringify({ route: routeCoords, start: originCoords }),
         }).then(res => res.json())
         .catch(() => ({ safetyScore: 0, crimesPerKm: 0 })); 
         const renderer = new google.maps.DirectionsRenderer({
@@ -259,6 +260,7 @@ async function calculateAndDisplayRoutes(origin, destination) {
             strokeOpacity: 0.5
           },
         });
+
         routeRenderers.push(renderer);
 
         const card = addRouteInfoToUI(i, leg, safetyData);
@@ -273,14 +275,11 @@ async function calculateAndDisplayRoutes(origin, destination) {
 
 function addRouteInfoToUI(index, leg, safetyData) {
   let explanations = [];
-  const timeMultiplier = safetyData.timeOfDay
   const weightedCrimeCount = safetyData.weightedCrimeCount
   const div = document.createElement("div");
   div.classList.add("route-card");
 
-  if (timeMultiplier === 1.6) {
-  explanations.push("Later hours increase overall weighting.");
-  }
+  
   
   if (weightedCrimeCount >= 1000) {
     explanations.push("High concentration of reported incidents influenced the score.");
@@ -307,7 +306,7 @@ function addRouteInfoToUI(index, leg, safetyData) {
     Distance: ${leg.distance.text}<br>
     Time: ${leg.duration.text}<br>
     Safety: <b style="color:${getRouteColor(safetyData.safetyScore)}">${safetyLabel}</b> (${safetyData.safetyScore.toFixed(1)}/100)<br>
-    <b style="display:block; margin-top:5px;">${explanation}</b>
+    <b style="display:block; margin-top:9px;">${explanation}</b>
   `;
 
   attachStartRouteButton(div, index, safetyData, directionsResponseGlobal, map, routeRenderers);
