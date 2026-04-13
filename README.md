@@ -1,6 +1,6 @@
 # SafeRouteDC
 
-SafeRouteDC assigns each route a **safety score from 0–100**, where higher values indicate safer routes. The score is computed using nearby crime data and accounts for proximity, severity, and recency of incidents.
+SafeRouteDC assigns each route a **safety score from 0–100**, The score is computed using nearby crime data and accounts for proximity, severity, and recency of incidents.
 
 
 ## Safety Scoring Model (Overview)
