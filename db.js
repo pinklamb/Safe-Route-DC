@@ -66,7 +66,7 @@ async function saveCrimeData(crimesBatch) {
         date_occurred DATETIME,
         address VARCHAR(255),
         latitude DECIMAL(10,7),
-        longitude DECIMAL(10,7),
+        longitude DECIMAL(10,7)
       );
     `);
 
