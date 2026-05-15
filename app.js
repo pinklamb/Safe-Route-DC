@@ -43,9 +43,6 @@ app.post("/api/safetyScore", async (req, res) => {
         year: crime.year || 2025,
       }));
     } else {
-      if (!pool?.connected) {
-        return res.status(500).json({ error: "Database connection not ready" });
-      }
 
       // Build bounding box
       const lats = route.map(point => point.lat);
@@ -56,22 +53,16 @@ app.post("/api/safetyScore", async (req, res) => {
       const maxLat = Math.max(...lats) + buffer;
       const minLon = Math.min(...lngs) - buffer;
       const maxLon = Math.max(...lngs) + buffer;
-
-    
-      const result = await pool.request()
-        .input("minLat", sql.Decimal(10, 7), minLat)
-        .input("maxLat", sql.Decimal(10, 7), maxLat)
-        .input("minLon", sql.Decimal(10, 7), minLon)
-        .input("maxLon", sql.Decimal(10, 7), maxLon)
-        .query(`
-          SELECT crime_type, latitude, longitude, YEAR(date_occurred) AS year
-          FROM crimes
-          WHERE latitude BETWEEN @minLat AND @maxLat
-            AND longitude BETWEEN @minLon AND @maxLon
-        `);
-
-      crimes = result.recordset;
+      const [rows] = await pool.query(
+        `SELECT crime_type, latitude, longitude, YEAR(date_occurred) AS year
+         FROM crimes
+         WHERE latitude BETWEEN ? AND ?
+           AND longitude BETWEEN ? AND ?`,
+        [minLat, maxLat, minLon, maxLon]
+      );
+      crimes = rows;
     }
+    
 
     const getDistanceKm = (lat1, lon1, lat2, lon2) => {
       const R = 6371;
