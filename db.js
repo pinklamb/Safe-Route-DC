@@ -7,7 +7,7 @@ const reqLimit = 1000;
 
 
 
-export const pool = new sql.ConnectionPool({
+export const pool = new mysql.ConnectionPool({
     user: config.DB_USER,
     password: config.DB_PASSWORD,
     server: config.DB_SERVER,
