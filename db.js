@@ -7,7 +7,7 @@ const reqLimit = 1000;
 
 
 
-export const pool = mysql.createConnection({
+export const pool = mysql.createPool({
     user: config.DB_USER,
     password: config.DB_PASSWORD,
     server: config.DB_SERVER,
@@ -44,7 +44,7 @@ async function checkLayerExistence(year) {
 }
 
 export async function startDB() {
-    await pool.connect();
+    await pool.getConnection();
     console.log("Successful Database Connection.");
     const crimeCountResult = await pool.request().query(`SELECT COUNT(*) AS count FROM crimes`);
    
