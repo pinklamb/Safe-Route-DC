@@ -7,7 +7,7 @@ const reqLimit = 1000;
 
 
 
-export const pool = mysql.createPool({
+export const pool = mysql.createConnection({
     user: config.DB_USER,
     password: config.DB_PASSWORD,
     server: config.DB_SERVER,
