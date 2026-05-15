@@ -1,4 +1,4 @@
-import sql from "mssql";
+import mysql from "mysql2/promise";
 import { config } from "./config.js";
 
 const crimeBaseYear = 2025;
