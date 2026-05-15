@@ -48,7 +48,6 @@ async function checkLayerExistence(year) {
 export async function startDB() {
     const conn = await pool.getConnection();
     console.log("Successful Database Connection.");
-    const [rows] = await conn.query(`SELECT COUNT(*) AS count FROM crimes`);
     conn.release();
    
 
@@ -68,7 +67,6 @@ async function saveCrimeData(crimesBatch) {
         address VARCHAR(255),
         latitude DECIMAL(10,7),
         longitude DECIMAL(10,7),
-        raw_data TEXT
       );
     `);
 
