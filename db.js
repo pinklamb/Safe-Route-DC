@@ -78,12 +78,12 @@ async function saveCrimeData(crimesBatch) {
 
 
       await conn.query(
-        `INSERT INTO CrimesStage
-          (crime_id, crime_type, date_occurred, latitude, longitude)
-        VALUES
-          (?, ?, ?, ?, ?);`,
-        [CCN, OFFENSE, new Date(REPORT_DAT), LATITUDE, LONGITUDE]
-      );
+          `INSERT IGNORE INTO CrimesStage
+            (crime_id, crime_type, date_occurred, latitude, longitude)
+          VALUES
+            (?, ?, ?, ?, ?);`,
+          [CCN, OFFENSE, new Date(REPORT_DAT), LATITUDE, LONGITUDE]
+        );
       }
 
     //
