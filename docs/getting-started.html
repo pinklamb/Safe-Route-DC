@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SafeRoute DC project documentation: Getting started.">
+  <title>Getting started | SafeRoute DC Docs</title>
+  <link rel="stylesheet" href="./docs.css">
+</head>
+<body class="page-getting-started">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-icon">SR</span><span>SafeRoute DC</span><span class="brand-divider"></span><span class="brand-section">Documentation</span></a>
+    <a class="repo-link" href="https://github.com/pinklamb/Safe-Route-DC">View repository <span aria-hidden="true">&rarr;</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <a class="side-overview nav-item" data-page="index" href="./index.html">Overview</a>
+      <p class="nav-label">GETTING STARTED</p>
+      <a class="nav-item" data-page="getting-started" href="./getting-started.html">Getting started</a>
+      <a class="nav-item" data-page="how-it-works" href="./how-it-works.html">How it works</a>
+      <p class="nav-label">TECHNICAL REFERENCE</p>
+      <a class="nav-item" data-page="architecture" href="./architecture.html">Architecture</a>
+      <a class="nav-item" data-page="model" href="./model.html">Safety scoring model</a>
+      <a class="nav-item" data-page="limitations" href="./limitations.html">Data & limitations</a>
+      <p class="nav-label">OPERATIONS</p>
+      <a class="nav-item" data-page="deployment" href="./deployment.html">Railway deployment</a>
+    </aside>
+    <main class="main-content" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./index.html">Docs</a><span>/</span><span>Getting started</span></nav>
+      <header class="page-heading">
+        <p class="eyebrow">SAFEROUTE DC / PROJECT GUIDE</p>
+        <h1>Getting started</h1>
+        <p class="lead">Set up the Node.js app and its database and map services before running the route planner.</p>
+      </header>
+      <article class="prose">
+<h2>What you need</h2>
+<ul>
+  <li>Node.js 22.12 (the version declared by this project).</li>
+  <li>Access to a configured MySQL database containing the <code>crimes</code> table.</li>
+  <li>Valid Google Maps browser configuration for the map and directions interface.</li>
+  <li>Network access to the DC GIS crime data service if you run the scheduled data refresh.</li>
+</ul>
+<h2>Run the application locally</h2>
+<ol class="steps">
+  <li><span>1</span><div><strong>Clone the repository</strong><pre><code>git clone https://github.com/pinklamb/Safe-Route-DC.git
+cd Safe-Route-DC</code></pre></div></li>
+  <li><span>2</span><div><strong>Install dependencies</strong><pre><code>npm install</code></pre></div></li>
+  <li><span>3</span><div><strong>Set environment variables</strong><p>Provide <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_SERVER</code>, <code>DB_NAME</code>, and <code>DB_PORT</code>. Keep local credentials in an ignored <code>.env</code> file; never commit real credentials.</p></div></li>
+  <li><span>4</span><div><strong>Start the server</strong><pre><code>node server.js</code></pre><p>Open <code>http://localhost:4000</code>, or use the port assigned through <code>PORT</code>.</p></div></li>
+</ol>
+<div class="notice"><strong>Why <code>node server.js</code>?</strong> The current <code>package.json</code> does not define an <code>npm start</code> script.</div>
+<h2>What happens on startup</h2>
+<p>The web server starts, then the background updater connects to MySQL and synchronizes crime data. The refresh is scheduled again about once an hour. The map page can load before this database work finishes, but score requests need a working database connection.</p>
+<h2>Next steps</h2>
+<p>Continue with <a href="./how-it-works.html">How it works</a>, or see <a href="./deployment.html">Railway deployment</a> for the hosted service configuration.</p>
+      </article>
+      <footer class="page-footer"><span>SafeRoute DC documentation</span><a href="#main">Back to top &uarr;</a></footer>
+    </main>
+  </div>
+</body>
+</html>

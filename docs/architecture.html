@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SafeRoute DC project documentation: Architecture.">
+  <title>Architecture | SafeRoute DC Docs</title>
+  <link rel="stylesheet" href="./docs.css">
+</head>
+<body class="page-architecture">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-icon">SR</span><span>SafeRoute DC</span><span class="brand-divider"></span><span class="brand-section">Documentation</span></a>
+    <a class="repo-link" href="https://github.com/pinklamb/Safe-Route-DC">View repository <span aria-hidden="true">&rarr;</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <a class="side-overview nav-item" data-page="index" href="./index.html">Overview</a>
+      <p class="nav-label">GETTING STARTED</p>
+      <a class="nav-item" data-page="getting-started" href="./getting-started.html">Getting started</a>
+      <a class="nav-item" data-page="how-it-works" href="./how-it-works.html">How it works</a>
+      <p class="nav-label">TECHNICAL REFERENCE</p>
+      <a class="nav-item" data-page="architecture" href="./architecture.html">Architecture</a>
+      <a class="nav-item" data-page="model" href="./model.html">Safety scoring model</a>
+      <a class="nav-item" data-page="limitations" href="./limitations.html">Data & limitations</a>
+      <p class="nav-label">OPERATIONS</p>
+      <a class="nav-item" data-page="deployment" href="./deployment.html">Railway deployment</a>
+    </aside>
+    <main class="main-content" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./index.html">Docs</a><span>/</span><span>Architecture</span></nav>
+      <header class="page-heading">
+        <p class="eyebrow">SAFEROUTE DC / PROJECT GUIDE</p>
+        <h1>Architecture</h1>
+        <p class="lead">How the browser, Railway Docker service, Express API, MySQL database, and DC GIS crime feed fit together.</p>
+      </header>
+      <article class="prose">
+<h2>System overview</h2>
+<p>The browser owns the map interaction. The Railway service hosts the Node.js/Express application. Express uses MySQL for crime records, while a scheduled task refreshes those records from the DC GIS service.</p>
+<pre class="diagram"><code>+-------------------------------+
+| Visitor browser               |
+| SafeRoute UI + Google Maps    |
++---------------+---------------+
+                | POST /api/safetyScore
+                v
++-------------------------------+
+| Railway service (Docker)      |
+| Node.js + Express              |
+| server.js / app.js             |
++---------------+---------------+
+                | mysql2 connection pool
+                v
++-------------------------------+
+| MySQL database                 |
+| crimes table                   |
++-------------------------------+
+                ^
+                | hourly data sync
++---------------+---------------+
+| DC GIS MPD crime FeatureServer|
++-------------------------------+</code></pre>
+<h2>Application components</h2>
+<div class="table-wrap"><table><thead><tr><th>Component</th><th>Responsibility</th><th>Code location</th></tr></thead><tbody>
+<tr><td>Browser UI</td><td>Location entry, Google Maps directions, route drawing, score display</td><td><code>public/</code></td></tr>
+<tr><td>HTTP server</td><td>Starts Express on the Railway-provided port, with a local fallback of 4000</td><td><code>server.js</code></td></tr>
+<tr><td>Scoring API</td><td>Receives route points, queries nearby crime rows, computes and returns score fields</td><td><code>app.js</code></td></tr>
+<tr><td>Database access</td><td>Creates the MySQL connection pool and reads/upserts crime records</td><td><code>db.js</code></td></tr>
+<tr><td>Crime data source</td><td>DC GIS MPD ArcGIS Feature Service, queried by year and in batches</td><td><code>db.js</code></td></tr>
+<tr><td>Hosted runtime</td><td>Docker-based service on Railway, according to this project's deployment setup</td><td>Railway service configuration</td></tr>
+</tbody></table></div>
+<h2>Crime data flow</h2>
+<ol>
+  <li>At process startup, the scheduled updater connects to the MySQL pool and begins a data refresh.</li>
+  <li>The updater checks DC GIS crime layers for years 2018 through 2025 and requests records in batches of up to 1,000.</li>
+  <li>Each batch is loaded through a temporary staging table, then inserted or updated in <code>crimes</code>.</li>
+  <li>The updater waits three seconds between batch requests and schedules another run after approximately one hour.</li>
+  <li>Score requests query MySQL using a route bounding box, then perform a distance check against route points.</li>
+</ol>
+<div class="notice"><strong>Data and app are separate services.</strong> The map/directions service, Railway container, MySQL host, and DC GIS endpoint are connected over network APIs. This repository does not contain the crime data itself.</div>
+      </article>
+      <footer class="page-footer"><span>SafeRoute DC documentation</span><a href="#main">Back to top &uarr;</a></footer>
+    </main>
+  </div>
+</body>
+</html>

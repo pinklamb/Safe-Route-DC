@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SafeRoute DC project documentation: How it works.">
+  <title>How it works | SafeRoute DC Docs</title>
+  <link rel="stylesheet" href="./docs.css">
+</head>
+<body class="page-how-it-works">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-icon">SR</span><span>SafeRoute DC</span><span class="brand-divider"></span><span class="brand-section">Documentation</span></a>
+    <a class="repo-link" href="https://github.com/pinklamb/Safe-Route-DC">View repository <span aria-hidden="true">&rarr;</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <a class="side-overview nav-item" data-page="index" href="./index.html">Overview</a>
+      <p class="nav-label">GETTING STARTED</p>
+      <a class="nav-item" data-page="getting-started" href="./getting-started.html">Getting started</a>
+      <a class="nav-item" data-page="how-it-works" href="./how-it-works.html">How it works</a>
+      <p class="nav-label">TECHNICAL REFERENCE</p>
+      <a class="nav-item" data-page="architecture" href="./architecture.html">Architecture</a>
+      <a class="nav-item" data-page="model" href="./model.html">Safety scoring model</a>
+      <a class="nav-item" data-page="limitations" href="./limitations.html">Data & limitations</a>
+      <p class="nav-label">OPERATIONS</p>
+      <a class="nav-item" data-page="deployment" href="./deployment.html">Railway deployment</a>
+    </aside>
+    <main class="main-content" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./index.html">Docs</a><span>/</span><span>How it works</span></nav>
+      <header class="page-heading">
+        <p class="eyebrow">SAFEROUTE DC / PROJECT GUIDE</p>
+        <h1>How it works</h1>
+        <p class="lead">A route request passes from the browser through the Express API, which looks up nearby records and returns a score for each option.</p>
+      </header>
+      <article class="prose">
+<h2>From locations to route options</h2>
+<ol class="steps">
+  <li><span>1</span><div><strong>Choose a start and destination</strong><p>The browser page accepts locations and uses Google Maps services to resolve places and request walking directions.</p></div></li>
+  <li><span>2</span><div><strong>Draw the route alternatives</strong><p>The app receives route alternatives, decodes each route polyline into latitude/longitude points, and draws them on the map.</p></div></li>
+  <li><span>3</span><div><strong>Ask the API for a score</strong><p>For each alternative, the browser posts its route points to <code>/api/safetyScore</code>.</p><pre><code>{ "route": [{ "lat": 38.90, "lng": -77.03 }, ...] }</code></pre></div></li>
+  <li><span>4</span><div><strong>Score nearby crime data</strong><p>Express queries the MySQL crime table around the route, applies the scoring rules, and returns the score and route distance.</p></div></li>
+  <li><span>5</span><div><strong>Compare the results</strong><p>The browser colors the alternatives and displays a score label with route distance and estimated travel time.</p></div></li>
+</ol>
+<h2>Score response</h2>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>safetyScore</code></td><td>Rounded route score from 0 to 100; higher values mean less weighted incident density under this heuristic.</td></tr>
+<tr><td><code>weightedPerKm</code></td><td>Weighted nearby incident total divided by the route distance baseline.</td></tr>
+<tr><td><code>routeDistanceKm</code></td><td>Route distance measured between the supplied route points, in kilometers.</td></tr>
+</tbody></table></div>
+<p>For formulas and the complete parameter list, see the <a href="./model.html">safety scoring model</a>. For system boundaries, see <a href="./architecture.html">Architecture</a>.</p>
+      </article>
+      <footer class="page-footer"><span>SafeRoute DC documentation</span><a href="#main">Back to top &uarr;</a></footer>
+    </main>
+  </div>
+</body>
+</html>
