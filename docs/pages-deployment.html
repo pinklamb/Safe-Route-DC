@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How SafeRoute DC documentation is deployed to GitHub Pages with GitHub Actions.">
+  <title>GitHub Pages publishing | SafeRoute DC Docs</title>
+  <link rel="stylesheet" href="./docs.css">
+</head>
+<body class="page-pages-deployment">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-icon">SR</span><span>SafeRoute DC</span><span class="brand-divider"></span><span class="brand-section">Documentation</span></a>
+    <a class="repo-link" href="https://github.com/pinklamb/Safe-Route-DC">View repository <span aria-hidden="true">&rarr;</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <a class="side-overview nav-item" data-page="index" href="./index.html">Overview</a>
+      <p class="nav-label">GETTING STARTED</p>
+      <a class="nav-item" data-page="getting-started" href="./getting-started.html">Getting started</a>
+      <a class="nav-item" data-page="how-it-works" href="./how-it-works.html">How it works</a>
+      <p class="nav-label">TECHNICAL REFERENCE</p>
+      <a class="nav-item" data-page="architecture" href="./architecture.html">Architecture</a>
+      <a class="nav-item" data-page="model" href="./model.html">Safety scoring model</a>
+      <a class="nav-item" data-page="limitations" href="./limitations.html">Data &amp; limitations</a>
+      <p class="nav-label">OPERATIONS</p>
+      <a class="nav-item" data-page="deployment" href="./deployment.html">Railway deployment</a>
+      <a class="nav-item" data-page="pages-deployment" href="./pages-deployment.html" aria-current="page">GitHub Pages publishing</a>
+    </aside>
+    <main class="main-content" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./index.html">Docs</a><span>/</span><span>GitHub Pages publishing</span></nav>
+      <header class="page-heading">
+        <p class="eyebrow">SAFEROUTE DC / PROJECT GUIDE</p>
+        <h1>GitHub Pages publishing</h1>
+        <p class="lead">The documentation site is deployed by GitHub Actions from the contents of the <code>docs/</code> folder.</p>
+      </header>
+      <article class="prose">
+<h2>How publishing works</h2>
+<p>The workflow is <code>.github/workflows/static.yml</code>. It runs automatically when changes are pushed to <code>main</code>; it can also be started manually from the repository's Actions tab.</p>
+<ol class="steps">
+  <li><span>1</span><div><strong>Check out the repository</strong><p>GitHub Actions checks out the commit being deployed.</p></div></li>
+  <li><span>2</span><div><strong>Prepare GitHub Pages</strong><p>The workflow configures the Pages deployment environment and permissions.</p></div></li>
+  <li><span>3</span><div><strong>Upload the documentation</strong><p>The workflow uploads <code>./docs</code> as the Pages artifact. <code>docs/index.html</code> becomes the site home page.</p></div></li>
+  <li><span>4</span><div><strong>Deploy the artifact</strong><p>The Pages deployment action publishes the uploaded static site.</p></div></li>
+</ol>
+<h2>Publish a documentation change</h2>
+<ol>
+  <li>Commit and push the documentation branch.</li>
+  <li>Open a pull request into <code>main</code> and merge it.</li>
+  <li>The push to <code>main</code> starts the Pages workflow.</li>
+  <li>In the repository, open <strong>Actions</strong> and confirm <strong>Deploy static content to Pages</strong> completes successfully.</li>
+  <li>Open <strong>Settings &rarr; Pages</strong> to find the live site address.</li>
+</ol>
+<p>The workflow only runs automatically for pushes to <code>main</code>. A feature branch or an open pull request does not update the live site. Merge the changes to <code>main</code> to publish them.</p>
+<h2>Pages settings</h2>
+<p>In <strong>Settings &rarr; Pages</strong>, the publishing source should be set to <strong>GitHub Actions</strong>. The workflow grants the deployment permissions it needs and serializes deployments so two site releases do not run at once.</p>
+<div class="notice"><strong>GitHub Pages hosts the documentation only.</strong> The route-planning app still runs as a Railway Docker service; Pages does not run Node.js, Express, or the MySQL-backed API.</div>
+<h2>Workflow source</h2>
+<p>The workflow source is maintained with the repository at <code>.github/workflows/static.yml</code>. It uses GitHub's Pages configure, artifact upload, and deploy actions. The artifact path is <code>./docs</code> so the project source, local config, and non-doc assets are not published as part of this site.</p>
+      </article>
+      <footer class="page-footer"><span>SafeRoute DC documentation</span><a href="#main">Back to top &uarr;</a></footer>
+    </main>
+  </div>
+</body>
+</html>
