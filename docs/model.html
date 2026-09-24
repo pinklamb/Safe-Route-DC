@@ -1,23 +1,88 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Full technical specification for the proposed SafeRoute DC safety scoring model.">
-  <title>Safety scoring model · SafeRoute DC</title>
+  <meta name="description" content="SafeRoute DC project documentation: Safety scoring model.">
+  <title>Safety scoring model | SafeRoute DC Docs</title>
   <link rel="stylesheet" href="./docs.css">
 </head>
-<body>
-  <header class="topbar"><a class="brand" href="./"><span class="brand-mark">S</span> SafeRoute <span class="brand-light">DC</span></a><a class="back-link" href="https://github.com/pinklamb/Safe-Route-DC">View source ↗</a></header>
-  <main id="top">
-    <section class="hero"><p class="eyebrow">TECHNICAL REFERENCE · SUPPLIED MODEL</p><h1>How the proposed<br><em>safety score works.</em></h1><p class="intro">A readable web version of the supplied Safety Scoring Model specification. This is the proposed model described in the source document, and it does not exactly match the current application code.</p><div class="hero-note"><span class="dot"></span> Formulas and parameters from the supplied specification</div></section>
-    <nav class="toc" aria-label="On this page"><a href="./">← Project overview</a><a href="#objective">Objective</a><a href="#spatial">Nearby incidents</a><a href="#weights">Weights</a><a href="#score">Final score</a><a href="#limits">Limitations</a></nav>
-    <section id="objective" class="section"><p class="eyebrow">01 / OBJECTIVE</p><h2>One route-level coefficient</h2><p>The proposal computes a safety score from 0 to 100 for a route. It combines incident severity, incident age, and proximity to the route, then normalizes weighted incident risk by route distance.</p></section>
-    <section id="spatial" class="section"><p class="eyebrow">02 / SPATIAL FILTERING</p><h2>Count incidents near the route</h2><p>An incident is included when its point is within 0.18 km of the route polyline. Distance is measured over the Earth's surface with the Haversine formula.</p><div class="formula"><span>d = 2R · atan2(√a, √(1 − a))</span><small>Great-circle distance</small></div><p>Here, <code>R = 6,371 km</code>; latitudes and longitudes are converted to radians. For two points, the intermediate value is:</p><div class="formula"><span>a = sin²(Δφ/2) + cos(φ₁)cos(φ₂)sin²(Δλ/2)</span><small>Δφ and Δλ are latitude and longitude differences</small></div><p>The route length is the sum of Haversine distances between consecutive route nodes. To avoid dividing by zero on very short routes, the scoring denominator is at least 1 km: <code>D<sub>safe</sub> = max(D, 1.0)</code>.</p></section>
-    <section id="weights" class="section"><p class="eyebrow">03 / INCIDENT WEIGHTS</p><h2>Severity fades with time</h2><div class="table-wrap"><table><thead><tr><th>Incident type</th><th>Proposed weight</th></tr></thead><tbody><tr><td>Homicide</td><td>5</td></tr><tr><td>Sex abuse</td><td>4</td></tr><tr><td>Assault with dangerous weapon</td><td>4</td></tr><tr><td>Robbery</td><td>3</td></tr><tr><td>Motor vehicle theft</td><td>3</td></tr><tr><td>Theft/auto</td><td>2</td></tr><tr><td>Theft/other</td><td>2</td></tr></tbody></table></div><p>Each incident’s severity weight is reduced exponentially by its age in years:</p><div class="formula"><span>w<sub>year</sub> = 0.8<sup>age</sup></span><small>age = current year − incident year</small></div><p>The total weighted risk is the sum across qualifying incidents: <code>W = Σ(w<sub>type,j</sub> × w<sub>year,j</sub>)</code>. Risk density is then <code>R = W / D<sub>safe</sub></code>.</p></section>
-    <section id="score" class="section"><p class="eyebrow">04 / FINAL SCORE</p><h2>Map risk density to 0–100</h2><div class="formula"><span>Score = 100 × e<sup>−0.0004R</sup></span><small>Proposed decay constant λ = 0.0004</small></div><p>The proposal says the score decreases smoothly as weighted incident density rises, approaching 100 for very low risk density and 0 for very high risk density.</p><div class="callout warning"><strong>This is the supplied proposal, not a description of the current code.</strong><br>The implementation in <code>app.js</code> uses different incident weights and decay (λ = 0.001), plus a time-of-day multiplier. The overview page lists those differences. Resolve which version is authoritative before presenting the scoring model as finalized.</div></section>
-    <section id="limits" class="section"><p class="eyebrow">05 / ASSUMPTIONS &amp; LIMITATIONS</p><h2>What the model assumes</h2><ul class="limits"><li>Incident weights add linearly; clustering does not add a separate effect.</li><li>Fixed severity weights represent relative danger, although the coefficients are manually selected rather than empirically calibrated.</li><li>Risk decays smoothly each year using a fixed 0.8 annual multiplier.</li><li>Hazards are treated as localized within the 0.18 km corridor.</li><li>Pedestrian path safety is approximated by nearby incident density per kilometer.</li></ul><h2 style="margin-top:32px">Possible next steps</h2><p>The supplied spec suggests learning parameters from verified feedback, using live incident feeds, adding risk to routing graph edges for multi-criteria routing, and eventually evaluating data-driven prediction. These are roadmap ideas, not current features.</p></section>
-    <footer><span>SafeRoute DC · Proposed model reference</span><a href="#top">Back to top ↑</a></footer>
-  </main>
+<body class="page-model">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-icon">SR</span><span>SafeRoute DC</span><span class="brand-divider"></span><span class="brand-section">Documentation</span></a>
+    <a class="repo-link" href="https://github.com/pinklamb/Safe-Route-DC">View repository <span aria-hidden="true">&rarr;</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <a class="side-overview nav-item" data-page="index" href="./index.html">Overview</a>
+      <p class="nav-label">GETTING STARTED</p>
+      <a class="nav-item" data-page="getting-started" href="./getting-started.html">Getting started</a>
+      <a class="nav-item" data-page="how-it-works" href="./how-it-works.html">How it works</a>
+      <p class="nav-label">TECHNICAL REFERENCE</p>
+      <a class="nav-item" data-page="architecture" href="./architecture.html">Architecture</a>
+      <a class="nav-item" data-page="model" href="./model.html">Safety scoring model</a>
+      <a class="nav-item" data-page="limitations" href="./limitations.html">Data & limitations</a>
+      <p class="nav-label">OPERATIONS</p>
+      <a class="nav-item" data-page="deployment" href="./deployment.html">Railway deployment</a>
+    </aside>
+    <main class="main-content" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./index.html">Docs</a><span>/</span><span>Safety scoring model</span></nav>
+      <header class="page-heading">
+        <p class="eyebrow">SAFEROUTE DC / PROJECT GUIDE</p>
+        <h1>Safety scoring model</h1>
+        <p class="lead">The complete scoring specification: spatial filtering, distance, severity weights, temporal decay, risk normalization, final score, assumptions, limitations, and proposed next steps.</p>
+      </header>
+      <article class="prose">
+<h2>Purpose</h2>
+<p>The model assigns a route a score from 0 to 100 using nearby crime records. It combines the incident severity and age, then normalizes the total by route length.</p>
+<h2>1. Spatial filtering</h2>
+<p>Count an incident when it is within <strong>0.18 km</strong> of the route. The implementation calculates distance from each crime to the route points provided by the browser; it does not calculate the minimum distance to every point along each segment.</p>
+<h2>2. Haversine distance</h2>
+<p>Distances account for Earth's curvature. The model uses Earth's mean radius <code>R = 6,371 km</code>, with latitude/longitude values converted to radians.</p>
+<div class="formula"><code>d = 2R &times; atan2(&radic;a, &radic;(1 &minus; a))</code></div>
+<div class="formula"><code>a = sin<sup>2</sup>(&Delta;&phi;/2) + cos(&phi;<sub>1</sub>)cos(&phi;<sub>2</sub>)sin<sup>2</sup>(&Delta;&lambda;/2)</code></div>
+<p>The route distance <code>D</code> is the sum of Haversine distances between consecutive route points. To avoid a zero denominator on very short paths, the model uses <code>D<sub>safe</sub> = max(D, 1.0 km)</code>.</p>
+<h2>3. Incident severity weights</h2>
+<div class="table-wrap"><table><thead><tr><th>Crime type</th><th>Weight</th></tr></thead><tbody>
+<tr><td>Homicide</td><td>5</td></tr><tr><td>Sex abuse</td><td>4</td></tr><tr><td>Assault with dangerous weapon</td><td>4</td></tr><tr><td>Robbery</td><td>3</td></tr><tr><td>Motor vehicle theft</td><td>3</td></tr><tr><td>Theft/auto</td><td>2</td></tr><tr><td>Theft/other</td><td>2</td></tr>
+</tbody></table></div>
+<p>Incident types not listed above use a default weight of 1 in the current code.</p>
+<h2>4. Temporal decay</h2>
+<p>Older incidents contribute less. The yearly multiplier is <code>w<sub>year</sub> = 0.8<sup>age</sup></code>, where <code>age = currentYear &minus; crimeYear</code>. The current code uses 2025 as its fixed current year.</p>
+<h2>5. Aggregate risk per kilometer</h2>
+<p>For each qualifying incident, multiply its type weight by its year multiplier, then add the contributions:</p>
+<div class="formula"><code>W = &Sigma;(w<sub>type,j</sub> &times; w<sub>year,j</sub>)</code></div>
+<p>Normalize by the safe route distance:</p>
+<div class="formula"><code>R = W / D<sub>safe</sub></code></div>
+<h2>6. Final safety score</h2>
+<div class="formula"><code>Score = 100 &times; exp(&minus;0.0004 &times; R)</code></div>
+<p>The decay constant is <code>&lambda; = 0.0004</code>. The implementation rounds the result to an integer and floors the output at 0; with a nonnegative risk value, the exponential formula keeps the score at or below 100.</p>
+<h2>Assumptions</h2>
+<ul>
+  <li>Incident risk adds linearly; event clusters do not get an additional cluster multiplier.</li>
+  <li>Fixed integer severity values are a useful approximation of relative incident risk.</li>
+  <li>Risk contribution decreases exponentially with incident age.</li>
+  <li>Incidents outside the fixed proximity threshold do not affect a route score.</li>
+  <li>Route safety is approximated using weighted incident density per kilometer.</li>
+</ul>
+<h2>Limitations</h2>
+<ul>
+  <li>Weights and the decay constant are manually selected rather than fitted to verified safety outcomes.</li>
+  <li>The model assumes individual contributions add linearly.</li>
+  <li>Route-point sampling approximates a corridor around a polyline and can miss incidents between sparse points.</li>
+  <li>A crime score cannot represent all street conditions or predict whether an incident will occur.</li>
+</ul>
+<h2>Future work in the source specification</h2>
+<ul>
+  <li>Calibrate weights using regression or optimization on verified feedback.</li>
+  <li>Integrate more current or streaming incident data.</li>
+  <li>Apply risk values to routing graph edges for multi-criteria path selection.</li>
+  <li>Evaluate a transition from fixed heuristics to a data-driven model.</li>
+</ul>
+<p class="source-note">This page reproduces the full scoring specification in the supplied SafetyScore PDF as web content and adds implementation notes from the current source code. No PDF is required to read the model.</p>
+      </article>
+      <footer class="page-footer"><span>SafeRoute DC documentation</span><a href="#main">Back to top &uarr;</a></footer>
+    </main>
+  </div>
 </body>
 </html>

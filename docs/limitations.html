@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SafeRoute DC project documentation: Data & limitations.">
+  <title>Data & limitations | SafeRoute DC Docs</title>
+  <link rel="stylesheet" href="./docs.css">
+</head>
+<body class="page-limitations">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-icon">SR</span><span>SafeRoute DC</span><span class="brand-divider"></span><span class="brand-section">Documentation</span></a>
+    <a class="repo-link" href="https://github.com/pinklamb/Safe-Route-DC">View repository <span aria-hidden="true">&rarr;</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <a class="side-overview nav-item" data-page="index" href="./index.html">Overview</a>
+      <p class="nav-label">GETTING STARTED</p>
+      <a class="nav-item" data-page="getting-started" href="./getting-started.html">Getting started</a>
+      <a class="nav-item" data-page="how-it-works" href="./how-it-works.html">How it works</a>
+      <p class="nav-label">TECHNICAL REFERENCE</p>
+      <a class="nav-item" data-page="architecture" href="./architecture.html">Architecture</a>
+      <a class="nav-item" data-page="model" href="./model.html">Safety scoring model</a>
+      <a class="nav-item" data-page="limitations" href="./limitations.html">Data & limitations</a>
+      <p class="nav-label">OPERATIONS</p>
+      <a class="nav-item" data-page="deployment" href="./deployment.html">Railway deployment</a>
+    </aside>
+    <main class="main-content" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./index.html">Docs</a><span>/</span><span>Data & limitations</span></nav>
+      <header class="page-heading">
+        <p class="eyebrow">SAFEROUTE DC / PROJECT GUIDE</p>
+        <h1>Data & limitations</h1>
+        <p class="lead">The score is based on historical reports and manually selected model assumptions. This page explains data coverage and how to interpret the result.</p>
+      </header>
+      <article class="prose">
+<h2>Crime data coverage</h2>
+<p>The database updater reads the DC GIS MPD crime Feature Service. The current code iterates yearly layers from 2018 through 2025, requests records in batches, and inserts or updates them in MySQL. The data represents reported historical incidents, not every incident that occurred.</p>
+<h2>What affects a score</h2>
+<ul>
+  <li>The score depends on which records are available and how their locations and categories were reported.</li>
+  <li>The code compares crime locations against supplied route points. Sparse geometry can miss events near the line between points.</li>
+  <li>The current model uses a fixed year value of 2025 for recency decay.</li>
+  <li>Incident weights are a heuristic and have not been shown here to predict real-world safety outcomes.</li>
+</ul>
+<h2>What a score cannot tell you</h2>
+<p>The model does not evaluate lighting, open businesses, sidewalks, construction, crowding, transit service, or current street conditions. It does not predict whether a person will experience crime. Consider the score alongside route distance, travel time, current local information, and your own judgment.</p>
+<div class="notice"><strong>Use as exploratory context.</strong> SafeRoute DC is a prototype route-planning aid, not an emergency service or a verified safety assessment.</div>
+      </article>
+      <footer class="page-footer"><span>SafeRoute DC documentation</span><a href="#main">Back to top &uarr;</a></footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SafeRoute DC project documentation: Railway deployment.">
+  <title>Railway deployment | SafeRoute DC Docs</title>
+  <link rel="stylesheet" href="./docs.css">
+</head>
+<body class="page-deployment">
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-icon">SR</span><span>SafeRoute DC</span><span class="brand-divider"></span><span class="brand-section">Documentation</span></a>
+    <a class="repo-link" href="https://github.com/pinklamb/Safe-Route-DC">View repository <span aria-hidden="true">&rarr;</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <a class="side-overview nav-item" data-page="index" href="./index.html">Overview</a>
+      <p class="nav-label">GETTING STARTED</p>
+      <a class="nav-item" data-page="getting-started" href="./getting-started.html">Getting started</a>
+      <a class="nav-item" data-page="how-it-works" href="./how-it-works.html">How it works</a>
+      <p class="nav-label">TECHNICAL REFERENCE</p>
+      <a class="nav-item" data-page="architecture" href="./architecture.html">Architecture</a>
+      <a class="nav-item" data-page="model" href="./model.html">Safety scoring model</a>
+      <a class="nav-item" data-page="limitations" href="./limitations.html">Data & limitations</a>
+      <p class="nav-label">OPERATIONS</p>
+      <a class="nav-item" data-page="deployment" href="./deployment.html">Railway deployment</a>
+    </aside>
+    <main class="main-content" id="main">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="./index.html">Docs</a><span>/</span><span>Railway deployment</span></nav>
+      <header class="page-heading">
+        <p class="eyebrow">SAFEROUTE DC / PROJECT GUIDE</p>
+        <h1>Railway deployment</h1>
+        <p class="lead">Deployment notes for the Railway-hosted, Docker-based Node.js service, including process startup, port handling, database variables, and source-repository gaps.</p>
+      </header>
+      <article class="prose">
+<h2>Deployment target</h2>
+<p>SafeRoute DC is deployed as a Docker-based service on Railway. The container runs the Node.js application; Railway supplies the runtime port and service environment.</p>
+<div class="notice"><strong>Repository note:</strong> this checkout has no committed <code>Dockerfile</code>, <code>railway.toml</code>, or <code>railway.json</code>. The Docker build configuration is therefore controlled in Railway or maintained outside this repository. The exact image build settings cannot be reproduced from this checkout alone.</div>
+<h2>Runtime contract</h2>
+<ul>
+  <li><strong>Runtime:</strong> Node.js 22.12, as declared in <code>package.json</code>.</li>
+  <li><strong>Process:</strong> <code>node server.js</code>.</li>
+  <li><strong>Port:</strong> reads <code>PORT</code>; defaults to 4000 for local development.</li>
+  <li><strong>Health behavior:</strong> the HTTP app starts while the background process connects to MySQL and syncs crime data.</li>
+</ul>
+<p>The current <code>package.json</code> has no <code>start</code> script. If a Railway service is configured to run <code>npm start</code>, add that script or change the Docker command to <code>node server.js</code>.</p>
+<h2>Railway variables</h2>
+<p>Set the database connection values in the Railway service's Variables panel:</p>
+<div class="table-wrap"><table><thead><tr><th>Variable</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>DB_USER</code></td><td>MySQL user</td></tr><tr><td><code>DB_PASSWORD</code></td><td>MySQL password</td></tr><tr><td><code>DB_SERVER</code></td><td>MySQL host</td></tr><tr><td><code>DB_NAME</code></td><td>Database/schema name</td></tr><tr><td><code>DB_PORT</code></td><td>MySQL port</td></tr>
+</tbody></table></div>
+<p>Railway provides the app's <code>PORT</code> value. Keep secrets in Railway's variable store or an ignored local <code>.env</code> file; never add real credentials to the repository or documentation.</p>
+<h2>Database and background sync</h2>
+<p>The app expects a reachable MySQL database with a <code>crimes</code> table. At startup, a background task connects and syncs DC GIS data. It schedules another attempt about once an hour, including after a failed attempt. The deployment therefore needs outbound access to both the database and the DC GIS Feature Service.</p>
+<h2>Deploy checklist</h2>
+<ol>
+  <li>Confirm Railway's Docker build context and Dockerfile path.</li>
+  <li>Set the database variables in the Railway service.</li>
+  <li>Ensure the container launches <code>node server.js</code> and binds through Railway's <code>PORT</code>.</li>
+  <li>Confirm the MySQL database and <code>crimes</code> table are reachable.</li>
+  <li>Review startup logs for the database connection and data refresh outcome.</li>
+</ol>
+      </article>
+      <footer class="page-footer"><span>SafeRoute DC documentation</span><a href="#main">Back to top &uarr;</a></footer>
+    </main>
+  </div>
+</body>
+</html>
