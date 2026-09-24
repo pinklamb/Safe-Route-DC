@@ -17,7 +17,7 @@ a:hover{text-decoration:underline}
 .nav-item{display:block;padding:7px 10px;border-radius:6px;font-size:13px;line-height:1.45;color:#343b43;margin:2px 0}
 .nav-item:hover{background:#f6f8fa;text-decoration:none}
 .nav-item[data-page="index"]{font-weight:650}
-.page-index .nav-item[data-page="index"],.page-getting-started .nav-item[data-page="getting-started"],.page-how-it-works .nav-item[data-page="how-it-works"],.page-architecture .nav-item[data-page="architecture"],.page-model .nav-item[data-page="model"],.page-deployment .nav-item[data-page="deployment"],.page-limitations .nav-item[data-page="limitations"]{background:#ddf4ff;color:#0969da;font-weight:650;box-shadow:inset 2px 0 #0969da}
+.page-index .nav-item[data-page="index"],.page-getting-started .nav-item[data-page="getting-started"],.page-how-it-works .nav-item[data-page="how-it-works"],.page-architecture .nav-item[data-page="architecture"],.page-model .nav-item[data-page="model"],.page-deployment .nav-item[data-page="deployment"],.page-limitations .nav-item[data-page="limitations"],.page-pages-deployment .nav-item[data-page="pages-deployment"]{background:#ddf4ff;color:#0969da;font-weight:650;box-shadow:inset 2px 0 #0969da}
 .main-content{min-width:0;max-width:1000px;padding:35px 64px 54px}
 .breadcrumbs{font-size:12px;color:var(--subtle);display:flex;gap:9px;align-items:center;margin-bottom:28px}
 .breadcrumbs span:nth-child(2){color:#afb8c1}
