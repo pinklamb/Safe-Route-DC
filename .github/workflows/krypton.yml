@@ -1,0 +1,18 @@
+# The Krypton gate: one line in each pull request's checks, the scorecard in the run summary, no comments.
+# Written by `krypton setup`; edit it freely, setup never overwrites it. Commit it to turn the gate on.
+name: Krypton
+on: pull_request
+permissions:
+  contents: read    # read the code
+  statuses: write   # set the Krypton gate line
+  id-token: write   # log in to Krypton as this repository, so there is no secret to store
+jobs:
+  krypton:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pinklamb/Krypton@main
+        with:
+          fail-on-worse: "true"   # a pull request fails only if it lowers the purity score
