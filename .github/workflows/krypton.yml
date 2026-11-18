@@ -6,6 +6,7 @@ permissions:
   contents: read    # read the code
   statuses: write   # set the Krypton gate line
   id-token: write   # log in to Krypton as this repository, so there is no secret to store
+  pull-requests: write
 jobs:
   krypton:
     runs-on: ubuntu-latest
