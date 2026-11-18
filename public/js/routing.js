@@ -273,6 +273,13 @@ async function calculateAndDisplayRoutes(origin, destination) {
 
 
 
+function safetyLabelFor(score) {
+  if (score >= 75) return "Low concern";
+  if (score >= 60) return "Moderate concern";
+  if (score >= 55) return "Use caution";
+  return "Be aware";
+}
+
 function addRouteInfoToUI(index, leg, safetyData) {
   let explanations = [];
   const weightedCrimeCount = safetyData.weightedCrimeCount
@@ -294,11 +301,7 @@ function addRouteInfoToUI(index, leg, safetyData) {
 
 
 
-  const safetyLabel =
-  safetyData.safetyScore >= 75 ? "Low concern" :
-  safetyData.safetyScore >= 60 ? "Moderate concern" :
-  safetyData.safetyScore >= 55 ? "Use caution" :
-  "Be aware";
+  const safetyLabel = safetyLabelFor(safetyData.safetyScore);
 
  
   div.innerHTML = `
