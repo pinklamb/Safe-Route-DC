@@ -17,3 +17,4 @@ jobs:
       - uses: pinklamb/Krypton@main
         with:
           fail-on-worse: "true"   # a pull request fails only if it lowers the purity score
+          target: "70"            # changed files must score at least 70
